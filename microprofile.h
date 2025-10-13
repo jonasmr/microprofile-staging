@@ -798,10 +798,6 @@ typedef void (*MicroProfileOnFreeze)(int nFrozen);
 #endif
 #endif
 
-#ifndef MICROPROFILE_GPU_TIMER_CALLBACKS
-#define MICROPROFILE_GPU_TIMER_CALLBACKS 0
-#endif
-
 #ifndef MICROPROFILE_GPU_FRAME_DELAY
 #define MICROPROFILE_GPU_FRAME_DELAY 5 // must be > 0
 #endif
@@ -1126,14 +1122,14 @@ extern "C"
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
 	MICROPROFILE_API void MicroProfileGpuInitD3D12(void* pDevice, uint32_t nNodeCount, void** pCommandQueues, void** pCopyQueues);
-	MICROPROFILE_API void MicroProfileGpuShutdown();
+	MICROPROFILE_API void MicroProfileGpuShutdownD3D12();
 	MICROPROFILE_API void MicroProfileSetCurrentNodeD3D12(uint32_t nNode);
 #endif
 
 #if MICROPROFILE_GPU_TIMERS_VULKAN
 #include <vulkan/vulkan.h>
 	void MicroProfileGpuInitVulkan(VkDevice* pDevices, VkPhysicalDevice* pPhysicalDevices, VkQueue* pQueues, uint32_t* QueueFamily, uint32_t nNodeCount);
-	MICROPROFILE_API void MicroProfileGpuShutdown();
+	MICROPROFILE_API void MicroProfileGpuShutdownVulkan();
 	MICROPROFILE_API void MicroProfileSetCurrentNodeVulkan(uint32_t nNode);
 #endif
 
@@ -1152,7 +1148,6 @@ extern "C"
 #endif
 
 #if MICROPROFILE_GPU_TIMERS
-#if MICROPROFILE_GPU_TIMER_CALLBACKS
 	typedef uint32_t (*MicroProfileGpuInsertTimeStamp_CB)(void* pContext);
 	typedef uint64_t (*MicroProfileGpuGetTimeStamp_CB)(uint32_t nKey);
 	typedef uint64_t (*MicroProfileTicksPerSecondGpu_CB)();
@@ -1165,15 +1160,6 @@ extern "C"
 													  MicroProfileGetGpuTickReference_CB GetTickReference,
 													  MicroProfileGpuFlip_CB Flip,
 													  MicroProfileGpuShutdown_CB Shutdown);
-#else
-	MICROPROFILE_API uint32_t MicroProfileGpuInsertTimeStamp(void* pContext);
-	MICROPROFILE_API uint64_t MicroProfileGpuGetTimeStamp(uint32_t nKey);
-	MICROPROFILE_API uint64_t MicroProfileTicksPerSecondGpu();
-	MICROPROFILE_API int MicroProfileGetGpuTickReference(int64_t* pOutCPU, int64_t* pOutGpu);
-	MICROPROFILE_API uint32_t MicroProfileGpuFlip(void*);
-	MICROPROFILE_API void MicroProfileGpuShutdown();
-#endif
-
 #else
 #define MicroProfileGpuInsertTimeStamp(a) 1
 #define MicroProfileGpuGetTimeStamp(a) 0
@@ -1188,9 +1174,9 @@ extern "C"
 #endif
 
 #if MICROPROFILE_GPU_TIMERS_D3D11
-#define MICROPROFILE_D3D_MAX_QUERIES (32 << 10)
+#define MICROPROFILE_D3D11_MAX_QUERIES (32 << 10)
 	MICROPROFILE_API void MicroProfileGpuInitD3D11(void* pDevice, void* pDeviceContext);
-	MICROPROFILE_API void MicroProfileGpuShutdown();
+	MICROPROFILE_API void MicroProfileGpuShutdownD3D11();
 #endif
 
 #if MICROPROFILE_GPU_TIMERS_GL
