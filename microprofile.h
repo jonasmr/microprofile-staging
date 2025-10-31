@@ -1154,7 +1154,17 @@ extern "C"
 	typedef int (*MicroProfileGetGpuTickReference_CB)(int64_t* pOutCPU, int64_t* pOutGpu);
 	typedef uint32_t (*MicroProfileGpuFlip_CB)(void*);
 	typedef void (*MicroProfileGpuShutdown_CB)();
-	MICROPROFILE_API void MicroProfileGpuSetCallbacks(MicroProfileGpuInsertTimeStamp_CB InsertTimeStamp,
+
+	enum struct MicroProfileGpuTimerStateType { Invalid = 0, D3D11, D3D12, Vulkan, GL, Custom};
+	struct MicroProfileGpuTimerState {
+		MicroProfileGpuTimerStateType Type = MicroProfileGpuTimerStateType::Invalid;
+	};
+	MICROPROFILE_API void MicroProfileGpuShutdownPlatform();
+
+	MICROPROFILE_API void MicroProfileGpuInitPlatform(
+		MicroProfileGpuTimerStateType eType,
+		MicroProfileGpuTimerState* pGpuState, 
+			MicroProfileGpuInsertTimeStamp_CB InsertTimeStamp,
 													  MicroProfileGpuGetTimeStamp_CB GetTimeStamp,
 													  MicroProfileTicksPerSecondGpu_CB TicksPerSecond,
 													  MicroProfileGetGpuTickReference_CB GetTickReference,
