@@ -1448,7 +1448,7 @@ float MicroProfileTickToMsMultiplierCpu()
 
 float MicroProfileTickToMsMultiplierGpu()
 {
-	return MicroProfileTickToMsMultiplier(MicroProfileTicksPerSecondGpu());
+	return MicroProfileTickToMsMultiplier(MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
 }
 uint16_t MicroProfileGetGroupIndex(MicroProfileToken t)
 {
@@ -3717,7 +3717,7 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 
 		MicroProfileGpuBegin(pContext, S.pGpuGlobal);
 
-		uint32_t nGpuTimeStamp = MicroProfileGpuFlip(pContext);
+		uint32_t nGpuTimeStamp = MicroProfileGpuFlip ? MicroProfileGpuFlip(pContext) : 0;
 
 		uint64_t nFrameIdx = S.nFramePutIndex++;
 		S.nFramePut = (S.nFramePut + 1) % MICROPROFILE_MAX_FRAME_HISTORY;
@@ -3759,9 +3759,9 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 			{
 
 				uint64_t nTickCurrent = pFrameCurrent->nFrameStartGpu;
-				uint64_t nTickNext = pFrameNext->nFrameStartGpu = MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu);
+				uint64_t nTickNext = pFrameNext->nFrameStartGpu = MicroProfileGpuGetTimeStamp ? MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu) : 1;
 				nTickCurrent = MicroProfileLogTickMin(nTickCurrent, nTickNext);
-				float fTime = 1000.f * (nTickNext - nTickCurrent) / MicroProfileTicksPerSecondGpu();
+				float fTime = 1000.f * (nTickNext - nTickCurrent) / (MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
 				fTime = fTimeGpu;
 				if(S.fDumpGpuSpike > 0.f && fTime > S.fDumpGpuSpike && fTime < fDumpTimeThreshold)
 				{

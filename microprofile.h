@@ -1162,10 +1162,10 @@ extern "C"
 	} MicroProfileGpuTimerStateType;
 
 
-	struct MicroProfileGpuTimerState
+	typedef struct MicroProfileGpuTimerState_
 	{
 		MicroProfileGpuTimerStateType Type;
-	};
+	}MicroProfileGpuTimerState;
 
 #if MICROPROFILE_GPU_TIMERS
 	typedef uint32_t (*MicroProfileGpuInsertTimeStamp_CB)(void* pContext);
