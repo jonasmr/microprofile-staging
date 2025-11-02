@@ -22,7 +22,11 @@
 // SOFTWARE.
 // ***********************************************************************
 
-#ifdef MICROPROFILE_USE_CONFIG
+#ifndef MICROPROFILE_USE_CONFIG
+#define MICROPROFILE_USE_CONFIG 1
+#endif
+
+#if MICROPROFILE_USE_CONFIG
 #include "microprofile.config.h"
 #endif
 
@@ -1147,6 +1151,22 @@ extern "C"
 	} while(0)
 #endif
 
+	typedef enum MicroProfileGpuTimerStateType_
+	{
+		MicroProfileGpuTimerStateType_Invalid = 0,
+		MicroProfileGpuTimerStateType_D3D11,
+		MicroProfileGpuTimerStateType_D3D12,
+		MicroProfileGpuTimerStateType_Vulkan,
+		MicroProfileGpuTimerStateType_GL,
+		MicroProfileGpuTimerStateType_Custom
+	} MicroProfileGpuTimerStateType;
+
+
+	struct MicroProfileGpuTimerState
+	{
+		MicroProfileGpuTimerStateType Type;
+	};
+
 #if MICROPROFILE_GPU_TIMERS
 	typedef uint32_t (*MicroProfileGpuInsertTimeStamp_CB)(void* pContext);
 	typedef uint64_t (*MicroProfileGpuGetTimeStamp_CB)(uint32_t nKey);
@@ -1155,22 +1175,25 @@ extern "C"
 	typedef uint32_t (*MicroProfileGpuFlip_CB)(void*);
 	typedef void (*MicroProfileGpuShutdown_CB)();
 
-	enum struct MicroProfileGpuTimerStateType { Invalid = 0, D3D11, D3D12, Vulkan, GL, Custom};
-	struct MicroProfileGpuTimerState {
-		MicroProfileGpuTimerStateType Type = MicroProfileGpuTimerStateType::Invalid;
-	};
 	MICROPROFILE_API void MicroProfileGpuShutdownPlatform();
 
-	MICROPROFILE_API void MicroProfileGpuInitPlatform(
-		MicroProfileGpuTimerStateType eType,
-		MicroProfileGpuTimerState* pGpuState, 
-			MicroProfileGpuInsertTimeStamp_CB InsertTimeStamp,
+	MICROPROFILE_API void MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType eType,
+													  MicroProfileGpuTimerState* pGpuState,
+													  MicroProfileGpuInsertTimeStamp_CB InsertTimeStamp,
 													  MicroProfileGpuGetTimeStamp_CB GetTimeStamp,
 													  MicroProfileTicksPerSecondGpu_CB TicksPerSecond,
 													  MicroProfileGetGpuTickReference_CB GetTickReference,
 													  MicroProfileGpuFlip_CB Flip,
 													  MicroProfileGpuShutdown_CB Shutdown);
 #else
+#define MicroProfileGpuShutdownPlatform()                                                                                                                                                              \
+	do                                                                                                                                                                                                 \
+	{                                                                                                                                                                                                  \
+	} while(0)
+#define MicroProfileGpuInitPlatform(...)                                                                                                                                                               \
+	do                                                                                                                                                                                                 \
+	{                                                                                                                                                                                                  \
+	} while(0)
 #define MicroProfileGpuInsertTimeStamp(a) 1
 #define MicroProfileGpuGetTimeStamp(a) 0
 #define MicroProfileTicksPerSecondGpu() 1

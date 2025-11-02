@@ -9781,7 +9781,7 @@ void MicroProfileGpuInitD3D11(void* pDevice_, void* pImmediateContext)
 
 	MicroProfileGpuTimerStateD3D11* pGPU = MP_ALLOC_OBJECT(MicroProfileGpuTimerStateD3D11);
 
-	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType::D3D11,
+	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType_D3D11,
 								pGPU,
 								MicroProfileGpuInsertTimeStampD3D11,
 								MicroProfileGpuGetTimeStampD3D11,
@@ -9886,7 +9886,7 @@ int MicroProfileGetGpuTickReferenceD3D11(int64_t* pOutCPU, int64_t* pOutGpu)
 }
 MicroProfileGpuTimerStateD3D11* MicroProfileGetGpuTimerStateD3D11()
 {
-	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType::D3D11)
+	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType_D3D11)
 		return (MicroProfileGpuTimerStateD3D11*)S.pGPU;
 	return nullptr;
 }
@@ -10146,7 +10146,7 @@ void MicroProfileGpuInitD3D12(void* pDevice_, uint32_t nNodeCount, void** pComma
 	MicroProfileGpuTimerStateD3D12* pGPU = MP_ALLOC_OBJECT(MicroProfileGpuTimerStateD3D12);
 	memset(pGPU, 0, sizeof(MicroProfileGpuTimerStateD3D12));
 
-	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType::D3D12,
+	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType_D3D12,
 								pGPU,
 								MicroProfileGpuInsertTimeStampD3D12,
 								MicroProfileGpuGetTimeStampD3D12,
@@ -10287,7 +10287,7 @@ int MicroProfileGetGpuTickReferenceD3D12(int64_t* pOutCPU, int64_t* pOutGpu)
 
 MicroProfileGpuTimerStateD3D12* MicroProfileGetGpuTimerStateD3D12()
 {
-	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType::D3D12)
+	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType_D3D12)
 		return (MicroProfileGpuTimerStateD3D12*)S.pGPU;
 	return nullptr;
 }
