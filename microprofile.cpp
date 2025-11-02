@@ -788,6 +788,8 @@ static MicroProfileGpuFlip_CB MicroProfileGpuFlip = 0;
 static MicroProfileGpuShutdown_CB MicroProfileGpuShutdown = 0;
 #endif
 
+
+
 #if MICROPROFILE_GPU_TIMERS_D3D11
 //:'######:::'########::'##::::'##::::'########:::'#######::'########:::::'##::::::'##:::
 //'##... ##:: ##.... ##: ##:::: ##:::: ##.... ##:'##.... ##: ##.... ##::'####::::'####:::
@@ -1448,7 +1450,11 @@ float MicroProfileTickToMsMultiplierCpu()
 
 float MicroProfileTickToMsMultiplierGpu()
 {
+#if 0 == MICROPROFILE_GPU_TIMERS 
+	return 1;
+#else
 	return MicroProfileTickToMsMultiplier(MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
+#endif
 }
 uint16_t MicroProfileGetGroupIndex(MicroProfileToken t)
 {
@@ -3717,7 +3723,12 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 
 		MicroProfileGpuBegin(pContext, S.pGpuGlobal);
 
-		uint32_t nGpuTimeStamp = MicroProfileGpuFlip ? MicroProfileGpuFlip(pContext) : 0;
+		uint32_t nGpuTimeStamp = 
+#if 0 == MICROPROFILE_GPU_TIMERS 
+			1;
+#else
+			MicroProfileGpuFlip ? MicroProfileGpuFlip(pContext) : 0;
+#endif
 
 		uint64_t nFrameIdx = S.nFramePutIndex++;
 		S.nFramePut = (S.nFramePut + 1) % MICROPROFILE_MAX_FRAME_HISTORY;
@@ -3759,9 +3770,19 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 			{
 
 				uint64_t nTickCurrent = pFrameCurrent->nFrameStartGpu;
-				uint64_t nTickNext = pFrameNext->nFrameStartGpu = MicroProfileGpuGetTimeStamp ? MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu) : 1;
+				uint64_t nTickNext = pFrameNext->nFrameStartGpu = 
+#if 0 == MICROPROFILE_GPU_TIMERS 
+					1;
+#else
+					MicroProfileGpuGetTimeStamp ? MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu) : 1;
+#endif
 				nTickCurrent = MicroProfileLogTickMin(nTickCurrent, nTickNext);
-				float fTime = 1000.f * (nTickNext - nTickCurrent) / (MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
+				float fTime = 1000.f * (nTickNext - nTickCurrent) / 
+#if 0 == MICROPROFILE_GPU_TIMERS 
+					1;
+#else
+					(MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
+#endif
 				fTime = fTimeGpu;
 				if(S.fDumpGpuSpike > 0.f && fTime > S.fDumpGpuSpike && fTime < fDumpTimeThreshold)
 				{
