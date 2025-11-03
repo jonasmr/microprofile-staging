@@ -788,8 +788,6 @@ static MicroProfileGpuFlip_CB MicroProfileGpuFlip = 0;
 static MicroProfileGpuShutdown_CB MicroProfileGpuShutdown = 0;
 #endif
 
-
-
 #if MICROPROFILE_GPU_TIMERS_D3D11
 //:'######:::'########::'##::::'##::::'########:::'#######::'########:::::'##::::::'##:::
 //'##... ##:: ##.... ##: ##:::: ##:::: ##.... ##:'##.... ##: ##.... ##::'####::::'####:::
@@ -884,6 +882,7 @@ struct MicroProfileFrameD3D12
 	ID3D12CommandAllocator* pCommandAllocator;
 	ID3D12CommandAllocator* pCommandAllocatorCopy;
 };
+
 struct MicroProfileGpuTimerStateD3D12 : public MicroProfileGpuTimerState
 {
 	ID3D12Device* pDevice;
@@ -930,13 +929,44 @@ struct MicroProfileGpuTimerStateD3D12 : public MicroProfileGpuTimerState
 // ##::: ##:: ##:::::::: ##:::: ##:::: ##::: ##:: ##:::::::
 //. ######::: ##::::::::. #######:::::. ######::: ########:
 //:......::::..::::::::::.......:::::::......::::........::
-struct MicroProfileGpuTimerStateGL
+struct MicroProfileGpuTimerStateGL : public MicroProfileGpuTimerState
 {
 	uint32_t GLTimers[MICROPROFILE_GL_MAX_QUERIES];
 	uint32_t GLTimerPos;
 };
+
 MicroProfileGpuTimerStateGL* MicroProfileGetGpuTimerStateGL();
+uint32_t MicroProfileGpuInsertTimeStampGL(void* pContext);
+uint64_t MicroProfileGpuGetTimeStampGL(uint32_t nKey);
+uint64_t MicroProfileTicksPerSecondGpuGL();
+int MicroProfileGetGpuTickReferenceGL(int64_t* pOutCpu, int64_t* pOutGpu);
+uint32_t MicroProfileGpuFlipGL(void* pContext);
+void MicroProfileGpuShutdownGL();
 #endif
+
+
+#if MICROPROFILE_GPU_TIMERS_VULKAN
+
+//:'######:::'########::'##::::'##::::'##::::'##:'##::::'##:'##:::::::'##:::'##::::'###::::'##::: ##:
+//'##... ##:: ##.... ##: ##:::: ##:::: ##:::: ##: ##:::: ##: ##::::::: ##::'##::::'## ##::: ###:: ##:
+// ##:::..::: ##:::: ##: ##:::: ##:::: ##:::: ##: ##:::: ##: ##::::::: ##:'##::::'##:. ##:: ####: ##:
+// ##::'####: ########:: ##:::: ##:::: ##:::: ##: ##:::: ##: ##::::::: #####::::'##:::. ##: ## ## ##:
+// ##::: ##:: ##.....::: ##:::: ##::::. ##:: ##:: ##:::: ##: ##::::::: ##. ##::: #########: ##. ####:
+// ##::: ##:: ##:::::::: ##:::: ##:::::. ## ##::: ##:::: ##: ##::::::: ##:. ##:: ##.... ##: ##:. ###:
+//. ######::: ##::::::::. #######:::::::. ###::::. #######:: ########: ##::. ##: ##:::: ##: ##::. ##:
+//:......::::..::::::::::.......:::::::::...::::::.......:::........::..::::..::..:::::..::..::::..::
+
+struct MicroProfileGpuTimerStateVulkan;
+MicroProfileGpuTimerStateVulkan* MicroProfileGetGpuTimerStateVulkan();
+uint32_t MicroProfileGpuInsertTimeStampVulkan(void* pContext);
+uint64_t MicroProfileGpuGetTimeStampVulkan(uint32_t nKey);
+uint64_t MicroProfileTicksPerSecondGpuVulkan();
+int MicroProfileGetGpuTickReferenceVulkan(int64_t* pOutCpu, int64_t* pOutGpu);
+uint32_t MicroProfileGpuFlipVulkan(void* pContext);
+void MicroProfileGpuShutdownVulkan();
+#endif
+
+
 
 struct MicroProfileSymbolState
 {
@@ -3723,7 +3753,7 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 
 		MicroProfileGpuBegin(pContext, S.pGpuGlobal);
 
-		uint32_t nGpuTimeStamp = 
+		uint32_t nGpuTimeStamp =
 #if 0 == MICROPROFILE_GPU_TIMERS 
 			1;
 #else
@@ -3770,18 +3800,18 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 			{
 
 				uint64_t nTickCurrent = pFrameCurrent->nFrameStartGpu;
-				uint64_t nTickNext = pFrameNext->nFrameStartGpu = 
+				uint64_t nTickNext = pFrameNext->nFrameStartGpu =
 #if 0 == MICROPROFILE_GPU_TIMERS 
 					1;
 #else
 					MicroProfileGpuGetTimeStamp ? MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu) : 1;
 #endif
 				nTickCurrent = MicroProfileLogTickMin(nTickCurrent, nTickNext);
-				float fTime = 1000.f * (nTickNext - nTickCurrent) / 
+				float fTime = 1000.f * (nTickNext - nTickCurrent) /
 #if 0 == MICROPROFILE_GPU_TIMERS 
 					1;
 #else
-					(MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
+							  (MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
 #endif
 				fTime = fTimeGpu;
 				if(S.fDumpGpuSpike > 0.f && fTime > S.fDumpGpuSpike && fTime < fDumpTimeThreshold)
@@ -9768,6 +9798,7 @@ uint32_t MicroProfileGpuFlipD3D11(void* pDeviceContext_)
 		{
 			uint32_t nStart = OldFrame.m_nQueryStart;
 			uint32_t nCount = OldFrame.m_nQueryCount;
+
 			for(uint32_t i = 0; i < nCount; ++i)
 			{
 				uint32_t nIndex = (i + nStart) % MICROPROFILE_D3D11_MAX_QUERIES;
@@ -10342,7 +10373,7 @@ struct MicroProfileGpuFrameVulkan
 	VkCommandBuffer CommandBuffer[MICROPROFILE_VULKAN_MAX_NODE_COUNT];
 	VkFence Fences[MICROPROFILE_VULKAN_MAX_NODE_COUNT];
 };
-struct MicroProfileGpuTimerStateVulkan
+struct MicroProfileGpuTimerStateVulkan : public MicroProfileGpuTimerState
 {
 	VkDevice Devices[MICROPROFILE_VULKAN_MAX_NODE_COUNT];
 	VkPhysicalDevice PhysicalDevices[MICROPROFILE_VULKAN_MAX_NODE_COUNT];
@@ -10366,7 +10397,7 @@ struct MicroProfileGpuTimerStateVulkan
 
 MicroProfileGpuTimerStateVulkan* MicroProfileGetGpuTimerStateVulkan()
 {
-	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType::Vulkan)
+	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType_Vulkan)
 		return (MicroProfileGpuTimerStateVulkan*)S.pGPU;
 	return nullptr;
 }
@@ -10374,7 +10405,7 @@ MicroProfileGpuTimerStateVulkan* MicroProfileGetGpuTimerStateVulkan()
 uint32_t MicroProfileGpuInsertTimeStampVulkan(void* pContext)
 {
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 	VkCommandBuffer CB = (VkCommandBuffer)pContext;
 	uint32_t nNode = pGPU->nCurrentNode;
@@ -10391,8 +10422,8 @@ void MicroProfileGpuFetchRangeVulkan(VkCommandBuffer CommandBuffer, uint32_t nNo
 	if(nCount <= 0)
 		return;
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
-		return 0;
+	if(!pGPU)
+		return;
 
 	vkGetQueryPoolResults(pGPU->Devices[nNode], pGPU->QueryPool[nNode], nBegin, nCount, 8 * nCount, &pGPU->nResults[nBegin], 8, VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT);
 	vkCmdResetQueryPool(CommandBuffer, pGPU->QueryPool[nNode], nBegin, nCount);
@@ -10404,7 +10435,7 @@ void MicroProfileGpuFetchRangeVulkan(VkCommandBuffer CommandBuffer, uint32_t nNo
 void MicroProfileGpuWaitFenceVulkan(uint32_t nNode, uint64_t nFrame)
 {
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
+	if(!pGPU)
 		return;
 
 	int r;
@@ -10426,8 +10457,8 @@ void MicroProfileGpuWaitFenceVulkan(uint32_t nNode, uint64_t nFrame)
 void MicroProfileGpuFetchResultsVulkan(VkCommandBuffer Buffer, uint64_t nFrame)
 {
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
-		return 0;
+	if(!pGPU)
+		return;
 
 	uint64_t nPending = pGPU->nPendingFrame;
 	// while(nPending <= nFrame)
@@ -10436,7 +10467,7 @@ void MicroProfileGpuFetchResultsVulkan(VkCommandBuffer Buffer, uint64_t nFrame)
 	{
 		uint32_t nInternal = nPending % MICROPROFILE_VULKAN_INTERNAL_DELAY;
 		uint32_t nNode = pGPU->Frames[nInternal].nNode;
-		MicroProfileGpuWaitFence(nNode, nInternal);
+		MicroProfileGpuWaitFenceVulkan(nNode, nInternal);
 		int64_t nTimestampOffset = 0;
 
 		if(nNode != 0)
@@ -10447,8 +10478,8 @@ void MicroProfileGpuFetchResultsVulkan(VkCommandBuffer Buffer, uint64_t nFrame)
 
 		uint32_t nBegin = pGPU->Frames[nInternal].nBegin;
 		uint32_t nCount = pGPU->Frames[nInternal].nCount;
-		MicroProfileGpuFetchRange(Buffer, nNode, nBegin, (nBegin + nCount) > MICROPROFILE_VULKAN_MAX_QUERIES ? MICROPROFILE_VULKAN_MAX_QUERIES - nBegin : nCount, nPending, nTimestampOffset);
-		MicroProfileGpuFetchRange(Buffer, nNode, 0, (nBegin + nCount) - MICROPROFILE_VULKAN_MAX_QUERIES, nPending, nTimestampOffset);
+		MicroProfileGpuFetchRangeVulkan(Buffer, nNode, nBegin, (nBegin + nCount) > MICROPROFILE_VULKAN_MAX_QUERIES ? MICROPROFILE_VULKAN_MAX_QUERIES - nBegin : nCount, nPending, nTimestampOffset);
+		MicroProfileGpuFetchRangeVulkan(Buffer, nNode, 0, (nBegin + nCount) - MICROPROFILE_VULKAN_MAX_QUERIES, nPending, nTimestampOffset);
 
 		nPending = ++pGPU->nPendingFrame;
 		MP_ASSERT(pGPU->nFrame > nPending);
@@ -10463,7 +10494,7 @@ uint64_t MicroProfileGpuGetTimeStampVulkan(uint32_t nIndex)
 	}
 
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 
 	uint32_t nFrame = nIndex >> 16;
@@ -10476,13 +10507,16 @@ uint64_t MicroProfileGpuGetTimeStampVulkan(uint32_t nIndex)
 
 uint64_t MicroProfileTicksPerSecondGpuVulkan()
 {
-	return S.pGPU->nFrequency;
+	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
+	if(!pGPU)
+		return 1;
+	return pGPU->nFrequency;
 }
 
 uint32_t MicroProfileGpuFlipVulkan(void* pContext)
 {
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 
 	uint32_t nNode = pGPU->nCurrentNode;
@@ -10519,7 +10553,7 @@ uint32_t MicroProfileGpuFlipVulkan(void* pContext)
 	pGPU->Frames[nFrameIndex].nNode = nNode;
 	pGPU->nFrame++;
 	////fetch from earlier frames
-	MicroProfileGpuFetchResults(CommandBuffer, pGPU->nFrame - MICROPROFILE_GPU_FRAME_DELAY);
+	MicroProfileGpuFetchResultsVulkan(CommandBuffer, pGPU->nFrame - MICROPROFILE_GPU_FRAME_DELAY);
 
 	vkEndCommandBuffer(F.CommandBuffer[nNode]);
 	VkSubmitInfo SubmitInfo = {};
@@ -10539,7 +10573,7 @@ void MicroProfileGpuInitVulkan(VkDevice* pDevices, VkPhysicalDevice* pPhysicalDe
 {
 	MicroProfileGpuTimerStateVulkan* pGPU = MP_ALLOC_OBJECT(MicroProfileGpuTimerStateVulkan);
 	memset(pGPU, 0, sizeof(MicroProfileGpuTimerStateVulkan));
-	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType::Vulkan,
+	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType_Vulkan,
 								pGPU,
 								MicroProfileGpuInsertTimeStampVulkan,
 								MicroProfileGpuGetTimeStampVulkan,
@@ -10633,16 +10667,15 @@ void MicroProfileSetCurrentNodeVulkan(uint32_t nNode)
 {
 
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
-		return 0;
-
+	if(!pGPU)
+		return;
 	pGPU->nCurrentNode = nNode;
 }
 
 int MicroProfileGetGpuTickReferenceVulkan(int64_t* pOutCPU, int64_t* pOutGpu)
 {
 	MicroProfileGpuTimerStateVulkan* pGPU = MicroProfileGetGpuTimerStateVulkan();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 
 	auto& F = pGPU->Frames[pGPU->nFrame % MICROPROFILE_VULKAN_INTERNAL_DELAY];
@@ -10696,7 +10729,7 @@ void MicroProfileGpuInitGL()
 {
 	MicroProfileGpuTimerStateGL* pGPU = MP_ALLOC_OBJECT(MicroProfileGpuTimerStateGL);
 	memset(pGPU, 0, sizeof(MicroProfileGpuTimerStateGL));
-	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType::GL,
+	MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType_GL,
 								pGPU,
 								MicroProfileGpuInsertTimeStampGL,
 								MicroProfileGpuGetTimeStampGL,
@@ -10712,7 +10745,7 @@ void MicroProfileGpuInitGL()
 uint32_t MicroProfileGpuInsertTimeStampGL(void* pContext)
 {
 	MicroProfileGpuTimerStateGL* pGPU = MicroProfileGetGpuTimerStateGL();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 
 	uint32_t nIndex = (pGPU->GLTimerPos + 1) % MICROPROFILE_GL_MAX_QUERIES;
@@ -10723,7 +10756,7 @@ uint32_t MicroProfileGpuInsertTimeStampGL(void* pContext)
 uint64_t MicroProfileGpuGetTimeStampGL(uint32_t nKey)
 {
 	MicroProfileGpuTimerStateGL* pGPU = MicroProfileGetGpuTimerStateGL();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 
 	uint64_t result;
@@ -10739,7 +10772,7 @@ uint64_t MicroProfileTicksPerSecondGpuGL()
 int MicroProfileGetGpuTickReferenceGL(int64_t* pOutCpu, int64_t* pOutGpu)
 {
 	MicroProfileGpuTimerStateGL* pGPU = MicroProfileGetGpuTimerStateGL();
-	if(!pGpu)
+	if(!pGPU)
 		return 0;
 
 	int64_t nGpuTimeStamp;
@@ -10784,15 +10817,15 @@ uint32_t MicroProfileGpuFlipGL(void* pContext)
 void MicroProfileGpuShutdownGL()
 {
 	MicroProfileGpuTimerStateGL* pGPU = MicroProfileGetGpuTimerStateGL();
-	if(!pGpu)
-		return 0;
+	if(!pGPU)
+		return;
 
 	glDeleteQueries(MICROPROFILE_GL_MAX_QUERIES, &pGPU->GLTimers[0]);
 }
 
 MicroProfileGpuTimerStateGL* MicroProfileGetGpuTimerStateGL()
 {
-	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType::GL)
+	if(S.pGPU && S.pGPU->Type == MicroProfileGpuTimerStateType_GL)
 		return (MicroProfileGpuTimerStateGL*)S.pGPU;
 	return nullptr;
 }
