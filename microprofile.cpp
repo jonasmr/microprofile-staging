@@ -780,12 +780,43 @@ struct MicroProfileThreadLogGpu
 };
 
 #if MICROPROFILE_GPU_TIMERS
-static MicroProfileGpuInsertTimeStamp_CB MicroProfileGpuInsertTimeStamp = 0;
-static MicroProfileGpuGetTimeStamp_CB MicroProfileGpuGetTimeStamp = 0;
-static MicroProfileTicksPerSecondGpu_CB MicroProfileTicksPerSecondGpu = 0;
-static MicroProfileGetGpuTickReference_CB MicroProfileGetGpuTickReference = 0;
-static MicroProfileGpuFlip_CB MicroProfileGpuFlip = 0;
-static MicroProfileGpuShutdown_CB MicroProfileGpuShutdown = 0;
+static MicroProfileGpuInsertTimeStamp_CB MicroProfileGpuInsertTimeStamp_Callback = 0;
+static MicroProfileGpuGetTimeStamp_CB MicroProfileGpuGetTimeStamp_Callback = 0;
+static MicroProfileTicksPerSecondGpu_CB MicroProfileTicksPerSecondGpu_Callback = 0;
+static MicroProfileGetGpuTickReference_CB MicroProfileGetGpuTickReference_Callback = 0;
+static MicroProfileGpuFlip_CB MicroProfileGpuFlip_Callback = 0;
+static MicroProfileGpuShutdown_CB MicroProfileGpuShutdown_Callback = 0;
+
+
+uint32_t MicroProfileGpuInsertTimeStamp(void* pContext)
+{
+	return MicroProfileGpuInsertTimeStamp_Callback ? MicroProfileGpuInsertTimeStamp_Callback(pContext) : 0;
+}
+uint64_t MicroProfileGpuGetTimeStamp(uint32_t nKey)
+{
+	return MicroProfileGpuGetTimeStamp_Callback ? MicroProfileGpuGetTimeStamp_Callback(nKey) : 1;
+
+}
+uint64_t MicroProfileTicksPerSecondGpu()
+{
+	return MicroProfileTicksPerSecondGpu_Callback ? MicroProfileTicksPerSecondGpu_Callback() : 1;
+}
+int MicroProfileGetGpuTickReference(int64_t* pOutCPU, int64_t* pOutGpu)
+{
+	return MicroProfileGetGpuTickReference_Callback ? MicroProfileGetGpuTickReference_Callback(pOutCPU, pOutGpu) :  0;
+
+}
+uint32_t MicroProfileGpuFlip(void* p)
+{
+	return MicroProfileGpuFlip_Callback ? MicroProfileGpuFlip_Callback(p) : 0;
+}
+void MicroProfileGpuShutdown()
+{
+	if(MicroProfileGpuShutdown_Callback) 
+		MicroProfileGpuShutdown_Callback();
+}
+
+
 #endif
 
 #if MICROPROFILE_GPU_TIMERS_D3D11
@@ -1480,11 +1511,7 @@ float MicroProfileTickToMsMultiplierCpu()
 
 float MicroProfileTickToMsMultiplierGpu()
 {
-#if 0 == MICROPROFILE_GPU_TIMERS 
-	return 1;
-#else
-	return MicroProfileTickToMsMultiplier(MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
-#endif
+	return MicroProfileTickToMsMultiplier(MicroProfileTicksPerSecondGpu());
 }
 uint16_t MicroProfileGetGroupIndex(MicroProfileToken t)
 {
@@ -3753,12 +3780,7 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 
 		MicroProfileGpuBegin(pContext, S.pGpuGlobal);
 
-		uint32_t nGpuTimeStamp =
-#if 0 == MICROPROFILE_GPU_TIMERS 
-			1;
-#else
-			MicroProfileGpuFlip ? MicroProfileGpuFlip(pContext) : 0;
-#endif
+		uint32_t nGpuTimeStamp = MicroProfileGpuFlip(pContext);
 
 		uint64_t nFrameIdx = S.nFramePutIndex++;
 		S.nFramePut = (S.nFramePut + 1) % MICROPROFILE_MAX_FRAME_HISTORY;
@@ -3800,19 +3822,9 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB, uint32_t
 			{
 
 				uint64_t nTickCurrent = pFrameCurrent->nFrameStartGpu;
-				uint64_t nTickNext = pFrameNext->nFrameStartGpu =
-#if 0 == MICROPROFILE_GPU_TIMERS 
-					1;
-#else
-					MicroProfileGpuGetTimeStamp ? MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu) : 1;
-#endif
+				uint64_t nTickNext = pFrameNext->nFrameStartGpu = MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu);
 				nTickCurrent = MicroProfileLogTickMin(nTickCurrent, nTickNext);
-				float fTime = 1000.f * (nTickNext - nTickCurrent) /
-#if 0 == MICROPROFILE_GPU_TIMERS 
-					1;
-#else
-							  (MicroProfileTicksPerSecondGpu ? MicroProfileTicksPerSecondGpu() : 1);
-#endif
+				float fTime = 1000.f * (nTickNext - nTickCurrent) / (MicroProfileTicksPerSecondGpu());
 				fTime = fTimeGpu;
 				if(S.fDumpGpuSpike > 0.f && fTime > S.fDumpGpuSpike && fTime < fDumpTimeThreshold)
 				{
@@ -9627,12 +9639,12 @@ void MicroProfileGpuShutdownPlatform()
 		MicroProfileGpuShutdown();
 		MP_FREE(S.pGPU);
 		S.pGPU = nullptr;
-		MicroProfileGpuInsertTimeStamp = nullptr;
-		MicroProfileGpuGetTimeStamp = nullptr;
-		MicroProfileTicksPerSecondGpu = nullptr;
-		MicroProfileGetGpuTickReference = nullptr;
-		MicroProfileGpuFlip = nullptr;
-		MicroProfileGpuShutdown = nullptr;
+		MicroProfileGpuInsertTimeStamp_Callback = nullptr;
+		MicroProfileGpuGetTimeStamp_Callback = nullptr;
+		MicroProfileTicksPerSecondGpu_Callback = nullptr;
+		MicroProfileGetGpuTickReference_Callback = nullptr;
+		MicroProfileGpuFlip_Callback = nullptr;
+		MicroProfileGpuShutdown_Callback = nullptr;
 	}
 }
 
@@ -9650,12 +9662,12 @@ void MicroProfileGpuInitPlatform(MicroProfileGpuTimerStateType eType,
 	pGPU->Type = eType;
 	S.pGPU = pGPU;
 
-	MicroProfileGpuInsertTimeStamp = InsertTimeStamp;
-	MicroProfileGpuGetTimeStamp = GetTimeStamp;
-	MicroProfileTicksPerSecondGpu = TicksPerSecond;
-	MicroProfileGetGpuTickReference = GetTickReference;
-	MicroProfileGpuFlip = Flip;
-	MicroProfileGpuShutdown = Shutdown;
+	MicroProfileGpuInsertTimeStamp_Callback = InsertTimeStamp;
+	MicroProfileGpuGetTimeStamp_Callback = GetTimeStamp;
+	MicroProfileTicksPerSecondGpu_Callback = TicksPerSecond;
+	MicroProfileGetGpuTickReference_Callback = GetTickReference;
+	MicroProfileGpuFlip_Callback = Flip;
+	MicroProfileGpuShutdown_Callback = Shutdown;
 }
 #endif
 
