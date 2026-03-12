@@ -350,20 +350,20 @@ const ETOKEN_MAX = 0x2000;
 
 
 
-var CanvasDetailedView = document.getElementById('DetailedView');
-var CanvasHistory = document.getElementById('History');
-var CanvasMenu = document.getElementById('CanvasMenu');
-var CanvasDetailedOffscreen = document.createElement('canvas');
-var FilterInputGroup = document.getElementById('filtergroup');
-var FilterInputTimer = document.getElementById('filtertimer');
+let CanvasDetailedView = document.getElementById('DetailedView');
+let CanvasHistory = document.getElementById('History');
+let CanvasMenu = document.getElementById('CanvasMenu');
+let CanvasDetailedOffscreen = document.createElement('canvas');
+let FilterInputGroup = document.getElementById('filtergroup');
+let FilterInputTimer = document.getElementById('filtertimer');
 
-var FilterInput = document.getElementById('FilterInput');
-var FilterInputDiv = document.getElementById('FilterInputDiv');
-var FilterInputDivPos = {"x":-1,"y":-1,"w":-1,"h":-1};
-var FilterInputMenu = document.getElementById('FilterInputMenu');
-var FilterInputMenuDiv = document.getElementById('FilterInputMenuDiv');
-var FilterInputMenuDivPos = {"x":-1,"y":-1,"w":-1,"h":-1};
-var FilterInputMenuValueLast = '';
+let FilterInput = document.getElementById('FilterInput');
+let FilterInputDiv = document.getElementById('FilterInputDiv');
+let FilterInputDivPos = {"x":-1,"y":-1,"w":-1,"h":-1};
+let FilterInputMenu = document.getElementById('FilterInputMenu');
+let FilterInputMenuDiv = document.getElementById('FilterInputMenuDiv');
+let FilterInputMenuDivPos = {"x":-1,"y":-1,"w":-1,"h":-1};
+let FilterInputMenuValueLast = '';
 
 let FilterInputSearch2 = document.getElementById('FilterInputSearch2');
 FilterInputSearch2.value = '';
@@ -375,59 +375,59 @@ const FLAGS_SECTION = 1;
 
 let LastDropTarget = null;
 
-var FilterInputGroupString = null;
-var FilterInputTimerString = null;
-var FilterInputArray = [FilterInputGroup, FilterInputTimer];
-var FilterGroup = null;
-var FilterTimer = null;
-var g_Msg = '0';
+let FilterInputGroupString = null;
+let FilterInputTimerString = null;
+let FilterInputArray = [FilterInputGroup, FilterInputTimer];
+let FilterGroup = null;
+let FilterTimer = null;
+let g_Msg = '0';
 
-var RedrawRequested = 0;
-var InsideDraw = 0;
+let RedrawRequested = 0;
+let InsideDraw = 0;
 
 
 
-var Initialized = 0;
-var fDetailedOffset = S.Frames[0].framestart;
-var fDetailedOffsetSecond = 0;
-var fDetailedRange = S.Frames[S.Frames.length-1].frameend - fDetailedOffset;
-var nWidth = CanvasDetailedView.width;
-var nHeight = CanvasDetailedView.height;
-var ReferenceTimeString = '100';
-var ReferenceTimeAutoString = 'auto';
-var ReferenceTime = 100;
-var TargetTime = 15;
-var TargetTimeString = '15ms';
-var nHistoryHeight = 70;
-var nOffsetY = 0;
-var nOffsetBarsX = 0;
-var nOffsetBarsY = 0;
-var nOffsetCountersY = 0;
-var nOffsetFilterSearch = 0;
-var nOffsetMenuThreads = 0;
-var nOffsetMenuGroups = 0;
-var FilterInputSearchLast = '';
-var nBarsWidth = 80;
-var MouseButtonState = [0,0,0,0,0,0,0,0];
-var KeyShiftDown = 0;
-var KeyAltDown = 0;
-var KeyCtrlDown = 0;
+let Initialized = 0;
+let fDetailedOffset = S.Frames[0].framestart;
+let fDetailedOffsetSecond = 0;
+let fDetailedRange = S.Frames[S.Frames.length-1].frameend - fDetailedOffset;
+let nWidth = CanvasDetailedView.width;
+let nHeight = CanvasDetailedView.height;
+let ReferenceTimeString = '100';
+let ReferenceTimeAutoString = 'auto';
+let ReferenceTime = 100;
+let TargetTime = 15;
+let TargetTimeString = '15ms';
+let nHistoryHeight = 70;
+let nOffsetY = 0;
+let nOffsetBarsX = 0;
+let nOffsetBarsY = 0;
+let nOffsetCountersY = 0;
+let nOffsetFilterSearch = 0;
+let nOffsetMenuThreads = 0;
+let nOffsetMenuGroups = 0;
+let FilterInputSearchLast = '';
+let nBarsWidth = 80;
+let MouseButtonState = [0,0,0,0,0,0,0,0];
+let KeyShiftDown = 0;
+let KeyAltDown = 0;
+let KeyCtrlDown = 0;
 let KeyHDown = 0;
-var MouseDragButton = 0;
-var ToolTipFlip = 0;
-var ToolTipCorner = 0;
+//let MouseDragButton = 0;
+let ToolTipFlip = 0;
+let ToolTipCorner = 0;
 let ToolTipImmediate = null;
-var DetailedViewMouseX = 0;
-var DetailedViewMouseY = 0;
-var DetailedMouseOverButton = 0;
-var DetailedMouseEvent = null;
-var HistoryViewMouseX = -1;
-var HistoryViewMouseY = -1;
-var GlobalMouseX = -1;
-var GlobalMouseY = -1;
-var MouseReleased = false;
-var MouseHistory = 0;
-var MouseDetailed = 0;
+let DetailedViewMouseX = 0;
+let DetailedViewMouseY = 0;
+let DetailedMouseOverButton = 0;
+let DetailedMouseEvent = null;
+let HistoryViewMouseX = -1;
+let HistoryViewMouseY = -1;
+let GlobalMouseX = -1;
+let GlobalMouseY = -1;
+let MouseReleased = false;
+let MouseHistory = 0;
+let MouseDetailed = 0;
 const FontName = 'Courier New';
 const FontHeight = 10;
 const FontHeightLarge = 22;
@@ -439,52 +439,51 @@ const FontLarge = 'Bold ' + FontHeightLarge + 'px ' + FontName;
 const FontFlash = 'Bold ' + FontHeightFlash + 'px ' + FontName;
 const BoxHeight = FontHeight + 2;
 let ThreadsHidden = {};
-var GroupsDisabled = new Object();
-var nMinWidth = 0.01;//subpixel width
-var nMinWidthPan = 1.0;//subpixel width when panning
-var nContextSwitchEnabled = 1;
-var DisableLod = 0;
-var DisableMerge = 0;
-var GroupColors = 0;
-var DrawDetailedFlameMode = 0;
-var DrawDetailedNewDraw = 1;
-var DrawDetailedCompareReverse = 1;
-var nModDown = 0;
-var g_MSG = 'no';
-var nDrawCount = 0;
-var nBackColors = ['#292929', '#343434' ];
-var nBackColorsDark = ['#292929', '#272727' ];
-var nBackColorOffset = '#404040';
+let GroupsDisabled = new Object();
+let nMinWidth = 0.01;//subpixel width
+let nMinWidthPan = 1.0;//subpixel width when panning
+let nContextSwitchEnabled = 1;
+let DisableLod = 0;
+let DisableMerge = 0;
+let GroupColors = 0;
+let DrawDetailedFlameMode = 0;
+let DrawDetailedNewDraw = 1;
+let DrawDetailedCompareReverse = 1;
+let nModDown = 0;
+let g_MSG = 'no';
+let nDrawCount = 0;
+let nBackColors = ['#292929', '#343434' ];
+let nBackColorsDark = ['#292929', '#272727' ];
+let nBackColorOffset = '#404040';
 const CSwitchColors =["#EAAC76","#8CE48B","#C4D688","#9DD8AF","#D7B6DA","#DBDA61","#8AD5E1","#57E5C4"];//generated by http://tools.medialab.sciences-po.fr/iwanthue/index.php
-var CSwitchHeight = 5;
-var FRAME_HISTORY_COLOR_CPU = '#ff7f27';
-var FRAME_HISTORY_COLOR_GPU = '#ffffff';
-var ZOOM_TIME = 0.5;
-var AnimationActive = false;
-var nHoverCSCpu = -1;
-var nHoverCSCpuNext = -1;
-var nHoverCSToolTip = null;
-var nHoverToken = -1;
-var HoverTokenOwner = null;
-//var nHoverFrame = -1;
-var nHoverTokenIndex = -1;
-var nHoverTokenLogIndex = -1;
-var nHoverCounter = 0;
-var nHoverCounterDelta = 8;
-var nHoverTokenNext = -1;
-var nHoverTokenLogIndexNext = -1;
-var nHoverTokenIndexNext = -1;
-var HoverTokenNextOwner = null;
-var nHoverCounter = -1;
-var nHoverTokenDrawn = -1;
-var nHideHelp = 0;
-var fFrameScale = 33.33;
-var SortColumn = 0;
-var SortColumnOrderFlip = 0;
-var SortColumnMouseOver = null;
-var SortColumnMouseOverNext = null;
-var ColumnsWidth = [];
-var ColumnsEnabled = [];
+let CSwitchHeight = 5;
+let FRAME_HISTORY_COLOR_CPU = '#ff7f27';
+let FRAME_HISTORY_COLOR_GPU = '#ffffff';
+let ZOOM_TIME = 0.5;
+let AnimationActive = false;
+let nHoverCSCpu = -1;
+let nHoverCSCpuNext = -1;
+let nHoverCSToolTip = null;
+let nHoverToken = -1;
+let HoverTokenOwner = null;
+let HoverTokenLocked = false;
+let nHoverTokenIndex = -1;
+let nHoverTokenLogIndex = -1;
+let nHoverCounterDelta = 8;
+let nHoverTokenNext = -1;
+let nHoverTokenLogIndexNext = -1;
+let nHoverTokenIndexNext = -1;
+let HoverTokenNextOwner = null;
+let nHoverCounter = -1;
+let nHoverTokenDrawn = -1;
+let nHideHelp = 0;
+let fFrameScale = 33.33;
+let SortColumn = 0;
+let SortColumnOrderFlip = 0;
+let SortColumnMouseOver = null;
+let SortColumnMouseOverNext = null;
+let ColumnsWidth = [];
+let ColumnsEnabled = [];
 let ColumnNames =["Average", "Max", "Total", "Min", "Spike", "Call Average", "Call Count", "Excl Average", "Excl Max"];
 let NumColumns = ColumnNames.length;
 while(ColumnsEnabled.length < NumColumns)
@@ -492,13 +491,13 @@ while(ColumnsEnabled.length < NumColumns)
 	ColumnsEnabled.push(1);
 	ColumnsWidth.push(20);
 }
-var FilterSearchActive = 0;
-var FilterSearchSelection = -1;
-var FilterSearchSelectionMax = 0;
-var FilterSearchPassIndex = -1;
+let FilterSearchActive = 0;
+let FilterSearchSelection = -1;
+let FilterSearchSelectionMax = 0;
+let FilterSearchPassIndex = -1;
 FilterSearchReset();
-var FilterSearchStartTime = new Date();
-var IgnoreInput = 0;
+let FilterSearchStartTime = new Date();
+let IgnoreInput = 0;
 function RangeInit()
 {
 	return {"Begin":-1, "End":-1, "YBegin":-1, "YEnd":-1, "Thread": -1 , "Index": -1, "Off": 0, "Second":0};
@@ -517,40 +516,45 @@ function RangeCopy(Dst, Src)
 	Dst.Off = Src.Off;
 	Dst.Second = Src.Second;
 }
-var RangeCpu = RangeInit();
-var RangeGpu = RangeInit();
-var RangeSelect = RangeInit();
 
-var RangeCpuNext = RangeInit();
-var RangeGpuNext = RangeInit();
 
-var RangeCpuHistory = RangeInit();
-var RangeGpuHistory = RangeInit();
+let RangeCpu = RangeInit();
+let RangeGpu = RangeInit();
+let RangeSelect = RangeInit();
 
-var fRangeBegin = 0;
-var fRangeEnd = -1;
-var fRangeThreadId = -1;
-var fRangeThreadIdNext = -1;
-var fRangeBeginNext = 0;
-var fRangeEndNext = 0;
-var fRangeBeginGpuNext = 0;
-var fRangeEndGpuNext = 0;
-var fRangeBeginHistory = -1;
-var fRangeEndHistory = -1;
-var fRangeBeginHistoryGpu = -1;
-var fRangeEndHistoryGpu = -1;
-var fRangeBeginSelect = 0;
-var fRangeEndSelect = -1;
-var ThreadYBegin;
-var ThreadYEnd;
+let RangeCpuNext = RangeInit();
+let RangeGpuNext = RangeInit();
 
-var ModeDetailed = 0;
-var ModeTimers = 1;
-var ModeTimers_Threads = 2;
-var ModeTimers_Groups = 3;
-var ModeCounters = 4;
-var ModeCount = 5;
-var Mode = ModeDetailed;
+let RangeCpuHistory = RangeInit();
+let RangeGpuHistory = RangeInit();
+
+let RangeCpuLocked = RangeInit();
+let RangeGpuLocked = RangeInit();
+
+let fRangeBegin = 0;
+let fRangeEnd = -1;
+let fRangeThreadId = -1;
+let fRangeThreadIdNext = -1;
+let fRangeBeginNext = 0;
+let fRangeEndNext = 0;
+let fRangeBeginGpuNext = 0;
+let fRangeEndGpuNext = 0;
+let fRangeBeginHistory = -1;
+let fRangeEndHistory = -1;
+let fRangeBeginHistoryGpu = -1;
+let fRangeEndHistoryGpu = -1;
+let fRangeBeginSelect = 0;
+let fRangeEndSelect = -1;
+let ThreadYBegin;
+let ThreadYEnd;
+
+let ModeDetailed = 0;
+let ModeTimers = 1;
+let ModeTimers_Threads = 2;
+let ModeTimers_Groups = 3;
+let ModeCounters = 4;
+let ModeCount = 5;
+let Mode = ModeDetailed;
 
 var DebugDrawQuadCount = 0;
 var DebugDrawTextCount = 0;
@@ -568,6 +572,7 @@ var ProfileStackTime = {};
 var ProfileStackName = {};
 let ProfileDrawStartLast = new Date();
 let ProfileDrawEndLast = new Date();
+
 function CreateEmptyFloatArray(Size)
 {
 	let a = Array(Size);
@@ -643,6 +648,30 @@ let ModeItems = ["Detailed", "Timers", "Threads", "Groups", "Counters"];
 let HideModeFullyHidden = 0;
 let HideModeCollapsed = 1;
 let HideMode = HideModeCollapsed;
+
+let FlashFrames = 10;
+let FlashFrameCounter = 0;
+let FlashMessage = '';
+
+
+const MouseDragOff = 0;
+const MouseDragDown = 1;
+const MouseDragUp = 2;
+const MouseDragMove = 3;
+let MouseDragKeyShift = 0;
+let MouseDragKeyCtrl = 0;
+let MouseDragKeyAlt = 0;
+
+let MouseDragState = MouseDragOff;
+let MouseDragTarget = 0;
+let MouseDragButton = 0;
+let MouseDragX = 0;
+let MouseDragY = 0;
+let MouseDragXLast = 0;
+let MouseDragYLast = 0;
+let MouseDragXStart = 0;
+let MouseDragYStart = 0;
+
 
 
 function ProfileModeClear()
@@ -1731,9 +1760,209 @@ function PreprocessCalculateAllTimers()
 	ProfileLeave();
 }
 
-var FlashFrames = 10;
-var FlashFrameCounter = 0;
-var FlashMessage = '';
+
+function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
+{
+	let RangeStart = Range.Begin;
+	let RangeEnd = Range.End;
+	let nFrameStart = 0;
+	let nFrameEnd = S.Frames.length-1;
+	while(nFrameStart < nFrameEnd && S.Frames[nFrameStart].frameend < RangeStart)
+		nFrameStart++;
+	while(nFrameStart+1 < nFrameEnd && S.Frames[nFrameEnd].framestart > RangeEnd)
+		nFrameEnd--;
+	nFrameEnd++;
+
+	let FrameCount = nFrameEnd - nFrameStart;
+	console.log("search ", nFrameStart, " to ", nFrameEnd, " count ", FrameCount);
+	if(0 == FrameCount)
+		return;
+	ProfileEnter("GetTimerValueInRange");
+
+	let SetValues = function(Dst, CallCount, CallCountExcl, Sum, SumExcl, Max, MaxExcl)
+	{
+		Dst.CallCount = CallCount;
+		Dst.CallCountExcl = CallCountExcl;
+		Dst.Sum = Sum.toFixed(3);
+		Dst.SumExcl = SumExcl.toFixed(3);
+		Dst.Max = Max.toFixed(3);
+		Dst.MaxExcl = MaxExcl.toFixed(3)
+		let CC = CallCount > 0 ? CallCount : 1;
+		let CCE = CallCountExcl > 0 ? CallCountExcl : 1;
+		Dst.Average = (Sum / CC).toFixed(3);
+		Dst.AverageExcl = (SumExcl / CCE).toFixed(3);
+	};
+
+
+	let ret = {};
+	ret.Log = {};
+	ret.Total = {};
+	ret.Range = Range;
+	ret.LogIndex = LogIndex;
+
+	let TotalCallCount = 0;
+	let TotalCallCountExcl = 0;
+	let TotalSum = 0;
+	let TotalSumExcl = 0;
+	let TotalMax = 0;
+	let TotalMaxExcl = 0;
+	let TotalAverage = 0;
+	let TotalAverageExcl = 0;
+
+	let ThreadCallCount = 0;
+	let ThreadCallCountExcl = 0;
+	let ThreadSum = 0;
+	let ThreadSumExcl = 0;
+	let ThreadMax = 0;
+	let ThreadMaxExcl = 0;
+	let ThreadAverage = 0;
+	let ThreadAverageExcl = 0;
+	let nNumLogs = S.Frames[0].ts.length;
+	let ChildTimeStackArray = new Array(nNumLogs);
+	let TimerStackArray = new Array(nNumLogs);
+	let StackPosArray = Array(nNumLogs);
+	let StackArray = Array(nNumLogs);
+	function ClearArray(a)
+	{
+		for(let j = 0; j < a.length; ++j)
+			a[j] = 0;
+	}
+	for(let i = 0; i < nNumLogs; ++i)
+	{
+		StackPosArray[i] = 0;
+		StackArray[i] = Array(20);
+		ChildTimeStackArray[i] = Array(32);
+		ClearArray(ChildTimeStackArray[i]);
+		TimerStackArray[i] = Array(S.TimerInfo.length);
+		ClearArray(TimerStackArray[i]);	
+	}
+
+	for(let i = nFrameStart; i < nFrameEnd; i++)
+	{
+		for(let j = 0; j < S.TimerInfo.length; j++)
+		{
+			S.TimerInfo[j].FrameSum = 0;
+			S.TimerInfo[j].FrameSumExcl = 0;
+		}
+
+		let fr = S.Frames[i];
+		for(nLog = 0; nLog < nNumLogs; nLog++)
+		{
+			let StackPos = StackPosArray[nLog];
+			let Stack = StackArray[nLog];
+			let ChildTimeStack = ChildTimeStackArray[nLog];
+			let TimerStack = TimerStackArray[nLog];
+
+			let ts = fr.ts[nLog];
+			let ti = fr.ti[nLog];
+			let tt = fr.tt[nLog];
+			let count = ts.length;
+
+			let CallCount = 0;
+			let CallCountExcl = 0;
+			let Sum = 0;
+			let SumExcl = 0;
+			let Max = 0;
+			let MaxExcl = 0;
+			let Average = 0;
+			let AverageExcl = 0;
+
+			for(j = 0; j < count; j++)
+			{
+				let type = tt[j];
+				let index = ti[j];
+				// clamp all timers to range
+				let time = Math.max(RangeStart, Math.min(ts[j], RangeEnd)); 
+				if(index < ETOKEN_MAX && index >= 0)
+				{
+					if(type == 1)
+					{
+						//push
+						Stack[StackPos] = time;
+						TimerStack[index] += 1;
+						if(StackArray[nLog][StackPos] != time)
+						{
+							console.log('fail fail fail');
+						}
+						StackPos++;
+					}
+					else if(type == 0) // leave
+					{
+						let TimeStart;
+						let TimeEnd = time;
+						let TimeChild = 0;
+						if(StackPos>0)
+						{
+							StackPos--;
+							TimeStart = Stack[StackPos];
+							TimeChild = ChildTimeStack[StackPos];
+							ChildTimeStack[StackPos] = 0;
+						}
+						else
+						{
+							TimeStart = Math.max(RangeStart, Math.min(S.Frames[nFrameStart].framestart));
+						}
+						let TimerIsRoot = TimerStack[index] == 0 || (0 == --TimerStack[index]);
+						let TimeDelta = TimeEnd - TimeStart;
+						let TimeDeltaExcl = Math.max(0, TimeDelta - TimeChild);
+						if(index == TimerIndex )
+						{
+							if(TimeDeltaExcl > 0)
+							{
+								SumExcl += TimeDeltaExcl;
+								CallCountExcl++;
+								if(TimeDeltaExcl > MaxExcl)
+								{
+									MaxExcl = TimeDeltaExcl;
+								}
+							}
+
+							if(TimerIsRoot && TimeDelta > 0)
+							{
+								CallCount++;
+								Sum += TimeDelta;
+								if(TimeDelta > Max)
+								{
+									Max = TimeDelta;
+								}
+							}
+						}
+						if(StackPos > 0)
+							ChildTimeStack[StackPos-1] += TimeDelta;
+					}
+				}
+			}
+			TotalCallCount += CallCount;
+			TotalCallCountExcl += CallCountExcl;
+			TotalSum += Sum;
+			TotalSumExcl += SumExcl;
+			TotalMax = Math.max(TotalMax, Max);
+			TotalMaxExcl = Math.max(TotalMaxExcl, MaxExcl);
+			TotalAverage += Average;
+			TotalAverageExcl += AverageExcl;
+
+			if(LogIndex == nLog)
+			{
+				ThreadCallCount += CallCount;
+				ThreadCallCountExcl += CallCountExcl;
+				ThreadSum += Sum;
+				ThreadSumExcl += SumExcl;
+				ThreadMax = Math.max(ThreadMax, Max);
+				ThreadMaxExcl = Math.max(ThreadMaxExcl, MaxExcl);
+				ThreadAverage += Average;
+				ThreadAverageExcl += AverageExcl;
+			}
+
+			StackPosArray[nLog] = StackPos;
+		}
+	}
+
+	SetValues(ret.Log, ThreadCallCount, ThreadCallCountExcl, ThreadSum, ThreadSumExcl, ThreadMax, ThreadMaxExcl);
+	SetValues(ret.Total, TotalCallCount, TotalCallCountExcl, TotalSum, TotalSumExcl, TotalMax,  TotalMaxExcl);
+	ProfileLeave();
+	return ret;
+}
+
 function TimeString(Diff)
 {
 	var DiffString = "0 sec";
@@ -2069,7 +2298,7 @@ function DrawToolTip(StringArray, Canvas, x, y, bSecondary)
 	return {"x":x, "y":y};
 }
 
-function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, SelectedRangeCpu, SelectedRangeGpu)
+function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, SelectedRangeCpu, SelectedRangeGpu, RangeAggr)
 {
 	let StringArray = [];
 	let groupid = So.TimerInfo[nHoverToken].group;
@@ -2102,42 +2331,62 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 		StringArray.push("GPU Time");
 		StringArray.push((SelectedRangeGpu.End-SelectedRangeGpu.Begin).toFixed(3));
 	}
-	if(RangeValid(SelectedRangeCpu))
+	else if(RangeValid(SelectedRangeCpu))
 	{
 
 		StringArray.push("CPU Time");
 		StringArray.push((SelectedRangeCpu.End-SelectedRangeCpu.Begin).toFixed(3));
 	}
-
-	if(RangeValid(SelectedRangeGpu))
+	else
 	{
 		StringArray.push("");
-		StringArray.push("");
-		StringArray.push("GPU Aggregates");
 		StringArray.push("");
 	}
 
 	StringArray.push("");
 	StringArray.push("");
-	StringArray.push("Total");
-	StringArray.push("" + So.TimerInfo[nHoverToken].Sum);
-	StringArray.push("Max");
-	StringArray.push("" + So.TimerInfo[nHoverToken].Max);
-	StringArray.push("Average");
-	StringArray.push("" + So.TimerInfo[nHoverToken].Average);
-	StringArray.push("Count");
-	StringArray.push("" + So.TimerInfo[nHoverToken].CallCount);
 
-	StringArray.push("");
-	StringArray.push("");
-	StringArray.push("Excl Total");
-	StringArray.push("" + So.TimerInfo[nHoverToken].SumExcl);
-	StringArray.push("Excl Max");
-	StringArray.push("" + So.TimerInfo[nHoverToken].MaxExcl);
-	StringArray.push("Excl Average");
-	StringArray.push("" + So.TimerInfo[nHoverToken].AverageExcl);
-	StringArray.push("Excl Count");
-	StringArray.push("" + So.TimerInfo[nHoverToken].CallCountExcl);
+	let Add = function(Src)
+	{
+		StringArray.push("Total");
+		StringArray.push("" + Src.Sum);
+		StringArray.push("Max");
+		StringArray.push("" + Src.Max);
+		StringArray.push("Average");
+		StringArray.push("" + Src.Average);
+		StringArray.push("Count");
+		StringArray.push("" + Src.CallCount);
+		StringArray.push("Excl Total");
+		StringArray.push("" + Src.SumExcl);
+		StringArray.push("Excl Max");
+		StringArray.push("" + Src.MaxExcl);
+		StringArray.push("Excl Average");
+		StringArray.push("" + Src.AverageExcl);
+		StringArray.push("Excl Count");
+		StringArray.push("" + Src.CallCountExcl);
+	};
+	if(RangeAggr)
+	{
+		StringArray.push("[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]");
+		StringArray.push("All");
+		Add(RangeAggr.Total);
+		StringArray.push("");
+		StringArray.push("");
+		StringArray.push("[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]");
+		StringArray.push(So.ThreadNames[RangeAggr.LogIndex]);
+		Add(RangeAggr.Log);
+	}
+	else
+	{
+		if(RangeValid(SelectedRangeGpu))
+		{
+			StringArray.push("");
+			StringArray.push("");
+			StringArray.push("GPU Aggregates");
+			StringArray.push("");
+		}
+		Add(So.TimerInfo[nHoverToken]);
+	}
 
 	StringArray.push("");
 	StringArray.push("");
@@ -2208,7 +2457,6 @@ function DrawHoverToolTip()
 		let bShowTimers = Mode == ModeTimers || Mode == ModeTimers_Threads || Mode == ModeTimers_Groups;
 		if(bShowTimers)
 		{
-			// var StringArray = [];
 			let groupid = S.TimerInfo[nHoverToken].group;
 			StringArray.push("Timer");
 			StringArray.push(S.TimerInfo[nHoverToken].name);
@@ -2256,15 +2504,28 @@ function DrawHoverToolTip()
 		}
 		else
 		{
-			let cpu = S == HoverTokenOwner ? RangeCpu : null;
-			let gpu = S == HoverTokenOwner ? RangeGpu : null;
-			StringArray = BuildToolTipDetailed(S, nHoverToken, HoverTokenOwner, 0, cpu, gpu);
+			let RangeAggregation;
+			if(Mode == ModeDetailed && RangeValid(RangeSelect))
+			{
+				RangeAggregation = GetTimerValueInRange(S, RangeSelect, nHoverToken, nHoverTokenLogIndex);
+			}
+			let cpu = S == HoverTokenOwner ? RangeCpuLocked : null;
+			let gpu = S == HoverTokenOwner ? RangeGpuLocked : null;
+			StringArray = BuildToolTipDetailed(S, nHoverToken, HoverTokenOwner, 0, cpu, gpu, RangeAggregation);
 			let nCompareHoverToken = TimerRemapReverse[nHoverToken];
 			if(nCompareHoverToken > -1)
 			{
-				let cpu = S2 == HoverTokenOwner ? RangeCpu : null;
-				let gpu = S2 == HoverTokenOwner ? RangeGpu : null;
-				StringArray2 = BuildToolTipDetailed(S2, nCompareHoverToken, HoverTokenOwner, 1, cpu, gpu);
+				let RangeAggregationOther;
+				if(Mode == ModeDetailed && RangeValid(RangeSelect))
+				{
+					RangeSelect2 = RangeCopy(RangeSelect);
+					RangeSelect2.Begin += fDetailedOffsetSecond;
+					RangeSelect2.End += fDetailedOffsetSecond;
+					RangeAggregationOther = GetTimerValueInRange(S2, RangeSelect2, nCompareHoverToken, nHoverTokenLogIndex);
+				}
+				let cpu = S2 == HoverTokenOwner ? RangeCpuLocked : null;
+				let gpu = S2 == HoverTokenOwner ? RangeGpuLocked : null;
+				StringArray2 = BuildToolTipDetailed(S2, nCompareHoverToken, HoverTokenOwner, 1, cpu, gpu, RangeAggregationOther);
 			}
 		}
 		if(ToolTipCorner)
@@ -2292,9 +2553,9 @@ function DrawHoverToolTip()
 		StringArray.push("EfficiencyClass");
 		StringArray.push("" + S.CoreEfficiencyClass[nHoverCSCpu]);
 		StringArray.push("Begin");
-		StringArray.push("" + RangeCpu.Begin);
+		StringArray.push("" + RangeCpuLocked.Begin);
 		StringArray.push("End");
-		StringArray.push("" + RangeCpu.End);
+		StringArray.push("" + RangeCpuLocked.End);
 		if(ToolTipCorner)
 		{
 			DrawToolTip(StringArray, CanvasDetailedView, nWidth, nHeight);
@@ -4698,28 +4959,36 @@ function DrawDetailed(Animation)
 
 	if(KeyShiftDown || KeyCtrlDown || MouseDragSelectRange() || ZoomActive || FilterSearchActive)
 	{
-		nHoverToken = -1;
-		nHoverTokenIndex = -1;
-		nHoverTokenLogIndex = -1;
-		HoverTokenOwner = null;
+		if(!HoverTokenLocked)
+		{
+			nHoverToken = -1;
+			nHoverTokenIndex = -1;
+			nHoverTokenLogIndex = -1;
+			HoverTokenOwner = null;
+		}
 		RangeCpu = RangeInit();
 		RangeGpu = RangeInit();
 	}
 	else
 	{
-		nHoverToken = nHoverTokenNext;
-		HoverTokenOwner = HoverTokenNextOwner;
-		nHoverTokenIndex = nHoverTokenIndexNext;
-		nHoverTokenLogIndex = nHoverTokenLogIndexNext;
-		if(RangeValid(RangeCpuHistory))
+		if(!HoverTokenLocked)
 		{
-			RangeCopy(RangeCpu, RangeCpuHistory);
-			RangeCopy(RangeGpu, RangeGpuHistory);
-		}
-		else
-		{
-			RangeCopy(RangeCpu, RangeCpuNext);
-			RangeCopy(RangeGpu, RangeGpuNext);
+			nHoverToken = nHoverTokenNext;
+			HoverTokenOwner = HoverTokenNextOwner;
+			nHoverTokenIndex = nHoverTokenIndexNext;
+			nHoverTokenLogIndex = nHoverTokenLogIndexNext;
+			if(RangeValid(RangeCpuHistory))
+			{
+				RangeCopy(RangeCpu, RangeCpuHistory);
+				RangeCopy(RangeGpu, RangeGpuHistory);
+			}
+			else
+			{
+				RangeCopy(RangeCpu, RangeCpuNext);
+				RangeCopy(RangeGpu, RangeGpuNext);
+			}
+			RangeCopy(RangeCpuLocked, RangeCpu);
+			RangeCopy(RangeGpuLocked, RangeGpu);
 		}
 	}
 
@@ -4753,12 +5022,12 @@ function DrawDetailed(Animation)
 		}
 	}
 	RangeSet(RangeSelect);
-	RangeSet(RangeCpu);
-	RangeSet(RangeGpu);
-	var Offset = 0;
+	RangeSet(RangeCpuLocked);
+	RangeSet(RangeGpuLocked);
+	let Offset = 0;
 	Offset = DrawRange(context, RangeSelect, '#59d0ff', '#00ddff', "Selection", Offset);
-	Offset = DrawRange(context, RangeCpu, '#009900', '#00ff00', "Cpu", Offset);
-	Offset = DrawRange(context, RangeGpu, '#996600', '#775500', "Gpu", Offset);
+	Offset = DrawRange(context, RangeCpuLocked, '#009900', '#00ff00', "Cpu", Offset);
+	Offset = DrawRange(context, RangeGpuLocked, '#996600', '#775500', "Gpu", Offset);
 
 	DrawFilterSearchRanges(context, FilterSearchArray, '#ff9900', '#ff9900', ThreadYBegin);
 
@@ -5968,23 +6237,7 @@ function ResizeCanvas()
 }
 
 
-var MouseDragOff = 0;
-var MouseDragDown = 1;
-var MouseDragUp = 2;
-var MouseDragMove = 3;
-var MouseDragState = MouseDragOff;
-var MouseDragTarget = 0;
-var MouseDragButton = 0;
-var MouseDragButtonNext = 0;
-var MouseDragKeyShift = 0;
-var MouseDragKeyCtrl = 0;
-var MouseDragKeyAlt = 0;
-var MouseDragX = 0;
-var MouseDragY = 0;
-var MouseDragXLast = 0;
-var MouseDragYLast = 0;
-var MouseDragXStart = 0;
-var MouseDragYStart = 0;
+
 
 function clamp(number, min, max)
 {
@@ -6539,7 +6792,16 @@ function KeyUp(evt)
 		}
 		if(evt.keyCode == 90)
 		{
-			ToolTipCorner = 1-ToolTipCorner;
+			if(ToolTipCorner == 0 && nHoverToken >= 0)
+			{
+				ToolTipCorner = 1;
+				HoverTokenLocked = true;
+			}
+			else
+			{
+				ToolTipCorner = 0;
+				HoverTokenLocked = false;
+			}
 		}
 		if(evt.keyCode == 187)
 		{
@@ -6674,9 +6936,14 @@ function KeyUp(evt)
 					ShowDetailedSearch(false);
 				}
 			}
-			else
+			else if(RangeValid(RangeSelect))
 			{
 				RangeSelect = RangeInit();
+			}
+			else if(ToolTipCorner)
+			{
+				ToolTipCorner = 0;
+				HoverTokenLocked = 0;
 			}
 		}
 
@@ -6938,10 +7205,6 @@ function ReadCookie()
 		{
 			ColumnsEnabled = Obj.ColumnsEnabled;
 		}
-		if(Obj.ToolTipCorner)
-		{
-			ToolTipCorner = Obj.ToolTipCorner;
-		}
 		if(Obj.DrawDetailedFlameMode)
 		{
 			DrawDetailedFlameMode = Obj.DrawDetailedFlameMode;
@@ -6984,7 +7247,6 @@ function WriteCookie()
 	Obj.nContextSwitchEnabled = nContextSwitchEnabled;
 	Obj.GroupColors = GroupColors;
 	Obj.ColumnsEnabled = ColumnsEnabled;
-	Obj.ToolTipCorner = ToolTipCorner;
 	Obj.DrawDetailedFlameMode = DrawDetailedFlameMode;
 	Obj.DrawDetailedCompareReverse = DrawDetailedCompareReverse;
 	Obj.ThreadOrderNames = ThreadOrderNames;
