@@ -491,6 +491,9 @@ while(ColumnsEnabled.length < NumColumns)
 	ColumnsEnabled.push(1);
 	ColumnsWidth.push(20);
 }
+const HistogramHeight = 40;
+const HistogramNumBuckets = 30;
+
 let FilterSearchActive = 0;
 let FilterSearchSelection = -1;
 let FilterSearchSelectionMax = 0;
@@ -1580,6 +1583,8 @@ function PreprocessCalculateAllTimers()
 	let FrameCount = nFrameLast - nFrameFirst;
 	if(0 == FrameCount)
 		return;
+	let TimerValues = new Array(S.TimerInfo.length);
+	let TimerValuesExcl = new Array(S.TimerInfo.length);
 	for(let j = 0; j < S.TimerInfo.length; j++)
 	{
 		S.TimerInfo[j].CallCount = 0;
@@ -1595,6 +1600,8 @@ function PreprocessCalculateAllTimers()
 		S.TimerInfo[j].FrameCallAverage = 0;
 		S.TimerInfo[j].FrameMax = 0;
 		S.TimerInfo[j].FrameMaxExcl = 0;
+		TimerValues[j] = [];
+		TimerValuesExcl[j] = [];
 	}
 
 
@@ -1682,6 +1689,8 @@ function PreprocessCalculateAllTimers()
 						{
 							S.TimerInfo[index].MaxExcl = TimeDeltaExcl;
 						}
+						if(TimeDeltaExcl > 0)
+							TimerValuesExcl[index].push(TimeDeltaExcl);
 
 						if(TimerIsRoot)
 						{
@@ -1696,6 +1705,8 @@ function PreprocessCalculateAllTimers()
 								S.TimerInfo[index].worstend = TimeEnd;
 								S.TimerInfo[index].worstthread = nLog;
 							}
+							if(TimeDelta > 0)
+								TimerValues[index].push(TimeDelta);
 						}
 						if(StackPos > 0)
 							ChildTimeStack[StackPos-1] += TimeDelta;
@@ -1746,7 +1757,9 @@ function PreprocessCalculateAllTimers()
 		S.TimerInfo[j].FrameAverageExcl = FrameAverageExcl;
 		S.TimerInfo[j].FrameCallAverage = FrameCallAverage;
 		S.TimerInfo[j].FrameMax = FrameMax;
-		S.TimerInfo[j].FrameMaxExcl = FrameMaxExcl;	
+		S.TimerInfo[j].FrameMaxExcl = FrameMaxExcl;
+		S.TimerInfo[j].HistogramData = BuildHistogramData(TimerValues[j]);
+		S.TimerInfo[j].HistogramDataExcl = BuildHistogramData(TimerValuesExcl[j]);
 	}
 	ProfileLeave();
 }
@@ -1960,10 +1973,10 @@ function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
 
 	SetValues(ret.Log, ThreadCallCount, ThreadCallCountExcl, ThreadSum, ThreadSumExcl, ThreadMax, ThreadMaxExcl);
 	SetValues(ret.Total, TotalCallCount, TotalCallCountExcl, TotalSum, TotalSumExcl, TotalMax,  TotalMaxExcl);
-	ret.Total.Values = TotalValues;
-	ret.Total.ValuesExcl = TotalValuesExcl;
-	ret.Log.Values = ThreadValues;
-	ret.Log.ValuesExcl = ThreadValuesExcl;
+	ret.Total.HistogramData = BuildHistogramData(TotalValues);
+	ret.Total.HistogramDataExcl = BuildHistogramData(TotalValuesExcl);
+	ret.Log.HistogramData = BuildHistogramData(ThreadValues);
+	ret.Log.HistogramDataExcl = BuildHistogramData(ThreadValuesExcl);
 	ProfileLeave();
 	return ret;
 }
@@ -2246,15 +2259,13 @@ function DrawDetailedBackground(context)
 
 }
 
-var HistogramHeight = 40;
-var HistogramNumBuckets = 30;
 function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 {
-	var context = Canvas.getContext('2d');
+	let context = Canvas.getContext('2d');
 	context.font = Font;
-	var WidthArray = Array(Elements.length);
-	var nMaxWidth = 0;
-	var nHeight = 0;
+	let WidthArray = Array(Elements.length);
+	let nMaxWidth = 0;
+	let nHeight = 0;
 	for(i = 0; i < Elements.length; i++)
 	{
 		if(Elements[i].histogram)
@@ -2264,9 +2275,9 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 		}
 		else
 		{
-			var nWidth0 = context.measureText(Elements[i].label).width;
-			var nWidth1 = context.measureText(Elements[i].value).width;
-			var nSum = nWidth0 + nWidth1;
+			let nWidth0 = context.measureText(Elements[i].label).width;
+			let nWidth1 = context.measureText(Elements[i].value).width;
+			let nSum = nWidth0 + nWidth1;
 			WidthArray[i] = {label: nWidth0, value: nWidth1};
 			if(nSum > nMaxWidth)
 			{
@@ -2298,9 +2309,9 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 	context.fillStyle = 'black';
 	context.fillRect(x-1, y, nMaxWidth+2, nHeight);
 
-	var XPos = x;
-	var XPosRight = x + nMaxWidth;
-	var YPos = y + BoxHeight-2;
+	let XPos = x;
+	let XPosRight = x + nMaxWidth;
+	let YPos = y + BoxHeight-2;
 	for(i = 0; i < Elements.length; i++)
 	{
 		if(Elements[i].histogram)
@@ -2319,10 +2330,10 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 	return {"x":x, "y":y};
 }
 
-function DrawHistogram(context, Values, Color, x, y, w, h)
+function BuildHistogramData(Values)
 {
 	if(!Values || Values.length == 0)
-		return;
+		return null;
 	let nNumBuckets = HistogramNumBuckets;
 	let Min = Values[0];
 	let Max = Values[0];
@@ -2346,26 +2357,33 @@ function DrawHistogram(context, Values, Color, x, y, w, h)
 	for(let i = 0; i < nNumBuckets; ++i)
 		if(Buckets[i] > BucketMax) BucketMax = Buckets[i];
 	if(BucketMax == 0) BucketMax = 1;
+	return {Buckets: Buckets, BucketMax: BucketMax, Min: Min, Max: Max, NumBuckets: nNumBuckets};
+}
+
+function DrawHistogram(context, HistData, Color, x, y, w, h)
+{
+	if(!HistData)
+		return;
 
 	// draw background
 	context.fillStyle = '#181818';
 	context.fillRect(x, y, w, h);
 
 	// draw bars
-	let BarWidth = w / nNumBuckets;
+	let BarWidth = w / HistData.NumBuckets;
 	context.fillStyle = Color;
-	for(let i = 0; i < nNumBuckets; ++i)
+	for(let i = 0; i < HistData.NumBuckets; ++i)
 	{
-		let BarHeight = (Buckets[i] / BucketMax) * (h - 2);
-		if(Buckets[i] > 0 && BarHeight < 1)
+		let BarHeight = (HistData.Buckets[i] / HistData.BucketMax) * (h - 2);
+		if(HistData.Buckets[i] > 0 && BarHeight < 1)
 			BarHeight = 1;
 		context.fillRect(x + i * BarWidth, y + h - BarHeight, BarWidth - 1, BarHeight);
 	}
 
 	// draw min/max labels with background for readability
 	context.font = '8px monospace';
-	let MinText = Min.toFixed(2);
-	let MaxText = Max.toFixed(2);
+	let MinText = HistData.Min.toFixed(2);
+	let MaxText = HistData.Max.toFixed(2);
 	let MinW = context.measureText(MinText).width;
 	let MaxW = context.measureText(MaxText).width;
 	let pad = 2;
@@ -2430,18 +2448,18 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 	{
 		const RANGE_COLOR = 'cyan';
 		StringArray.push({label: "[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]", value: "All", color: RANGE_COLOR});
-		Add(RangeAggr.Total, RANGE_COLOR);
-		if(RangeAggr.Total.Values && RangeAggr.Total.Values.length > 1)
+		if(RangeAggr.Total.HistogramData)
 		{
-			StringArray.push({histogram: RangeAggr.Total.Values, color: RANGE_COLOR});
+			StringArray.push({histogram: RangeAggr.Total.HistogramData, color: RANGE_COLOR});
 		}
+		Add(RangeAggr.Total, RANGE_COLOR);
 		StringArray.push({label: "", value: "", color: RANGE_COLOR});
 		StringArray.push({label: "[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]", value: So.ThreadNames[RangeAggr.LogIndex], color: RANGE_COLOR});
-		Add(RangeAggr.Log, RANGE_COLOR);
-		if(RangeAggr.Log.Values && RangeAggr.Log.Values.length > 1)
+		if(RangeAggr.Log.HistogramData)
 		{
-			StringArray.push({histogram: RangeAggr.Log.Values, color: RANGE_COLOR});
+			StringArray.push({histogram: RangeAggr.Log.HistogramData, color: RANGE_COLOR});
 		}
+		Add(RangeAggr.Log, RANGE_COLOR);
 	}
 	else
 	{
@@ -2449,6 +2467,10 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 		{
 			StringArray.push({label: "", value: ""});
 			StringArray.push({label: "GPU Aggregates", value: ""});
+		}
+		if(So.TimerInfo[nHoverToken].HistogramData)
+		{
+			StringArray.push({histogram: So.TimerInfo[nHoverToken].HistogramData});
 		}
 		Add(So.TimerInfo[nHoverToken]);
 	}
@@ -7674,26 +7696,6 @@ function PreprocessLods()
 		MakeLod(i+1, MinDelta, TimeArray, TypeArray, IndexArray, DestLogStart);
 	}
 	ProfileLeave();
-}
-
-
-function HistogramCreate(MaxTime)
-{
-	let Histogram = new Object();
-	Histogram.MaxTime = MaxTime;
-	Histogram.MaxOccurence = 0;
-	Histogram.Occurences = new Uint32Array(100);
-	return Histogram;
-}
-function HistogramAdd(Histogram, Value)
-{
-	if(Value > Histogram.MaxTime)
-		debugger;
-	let Index = Math.floor(Value / Histogram.MaxTime);
-	Index = Math.max(0, Math.min(99, Index));
-	Occurrences[Index]++;
-	Histogram.MaxOccurence = Math.max(Histogram.MaxOccurence, Occurrences[Index]);
-
 }
 
 function PreprocessLogBarArray()
