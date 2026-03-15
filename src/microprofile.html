@@ -2272,7 +2272,8 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 		if(Elements[i].histogram)
 		{
 			nHeight += HistogramHeight + 4;
-			WidthArray[i] = {label: 0, value: 0};
+			let HistLabelW = context.measureText("" + Elements[i].histogram.BucketMax).width + 4;
+			WidthArray[i] = {label: HistLabelW, value: 0};
 		}
 		else
 		{
@@ -2288,7 +2289,12 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 		}
 	}
 	nMaxWidth += 15;
-	nMaxWidth = Math.max(nMaxWidth, HistogramNumBuckets * 4 + 10);
+	// ensure enough room for histogram label + bars
+	for(i = 0; i < Elements.length; i++)
+	{
+		if(Elements[i].histogram)
+			nMaxWidth = Math.max(nMaxWidth, WidthArray[i].label + HistogramNumBuckets * 4 + 10);
+	}
 	//bounds check.
 	if(!bSecondary)
 	{
@@ -2317,7 +2323,16 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 	{
 		if(Elements[i].histogram)
 		{
-			DrawHistogram(context, Elements[i].histogram, Elements[i].color || 'cyan', XPos + 2, YPos - BoxHeight + 4, nMaxWidth - 4, HistogramHeight);
+			let HistLabelW = WidthArray[i].label;
+			let HistX = XPos + HistLabelW;
+			let HistY = YPos - BoxHeight + 4;
+			let HistW = nMaxWidth - HistLabelW - 2;
+			DrawHistogram(context, Elements[i].histogram, Elements[i].color || 'cyan', HistX, HistY, HistW, HistogramHeight);
+			// draw bucket max count label to the left
+			context.fillStyle = '#aaaaaa';
+			context.font = '8px monospace';
+			context.fillText("" + Elements[i].histogram.BucketMax, XPos + 1, HistY + 8);
+			context.font = Font;
 			YPos += HistogramHeight + 4 - BoxHeight;
 		}
 		else
@@ -2391,10 +2406,16 @@ function DrawHistogram(context, HistData, Color, x, y, w, h)
 	let MaxW = context.measureText(MaxText).width;
 	let pad = 2;
 	context.fillStyle = 'rgba(0,0,0,0.7)';
-	context.fillRect(x, y, MinW + pad * 2, 10);
+	if(HistData.Min > 0)
+	{
+		context.fillRect(x, y, MinW + pad * 2, 10);
+	}
 	context.fillRect(x + w - MaxW - pad * 2, y, MaxW + pad * 2, 10);
 	context.fillStyle = '#aaaaaa';
-	context.fillText(MinText, x + pad, y + 8);
+	if(HistData.Min > 0)
+	{
+		context.fillText(MinText, x + pad, y + 8);
+	}
 	context.fillText(MaxText, x + w - MaxW - pad, y + 8);
 	context.font = Font;
 }

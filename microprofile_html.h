@@ -2290,7 +2290,8 @@ const char g_MicroProfileHtml_end_1[] =
 "		if(Elements[i].histogram)\n"
 "		{\n"
 "			nHeight += HistogramHeight + 4;\n"
-"			WidthArray[i] = {label: 0, value: 0};\n"
+"			let HistLabelW = context.measureText(\"\" + Elements[i].histogram.BucketMax).width + 4;\n"
+"			WidthArray[i] = {label: HistLabelW, value: 0};\n"
 "		}\n"
 "		else\n"
 "		{\n"
@@ -2306,7 +2307,12 @@ const char g_MicroProfileHtml_end_1[] =
 "		}\n"
 "	}\n"
 "	nMaxWidth += 15;\n"
-"	nMaxWidth = Math.max(nMaxWidth, HistogramNumBuckets * 4 + 10);\n"
+"	// ensure enough room for histogram label + bars\n"
+"	for(i = 0; i < Elements.length; i++)\n"
+"	{\n"
+"		if(Elements[i].histogram)\n"
+"			nMaxWidth = Math.max(nMaxWidth, WidthArray[i].label + HistogramNumBuckets * 4 + 10);\n"
+"	}\n"
 "	//bounds check.\n"
 "	if(!bSecondary)\n"
 "	{\n"
@@ -2335,7 +2341,16 @@ const char g_MicroProfileHtml_end_1[] =
 "	{\n"
 "		if(Elements[i].histogram)\n"
 "		{\n"
-"			DrawHistogram(context, Elements[i].histogram, Elements[i].color || \'cyan\', XPos + 2, YPos - BoxHeight + 4, nMaxWidth - 4, HistogramHeight);\n"
+"			let HistLabelW = WidthArray[i].label;\n"
+"			let HistX = XPos + HistLabelW;\n"
+"			let HistY = YPos - BoxHeight + 4;\n"
+"			let HistW = nMaxWidth - HistLabelW - 2;\n"
+"			DrawHistogram(context, Elements[i].histogram, Elements[i].color || \'cyan\', HistX, HistY, HistW, HistogramHeight);\n"
+"			// draw bucket max count label to the left\n"
+"			context.fillStyle = \'#aaaaaa\';\n"
+"			context.font = \'8px monospace\';\n"
+"			context.fillText(\"\" + Elements[i].histogram.BucketMax, XPos + 1, HistY + 8);\n"
+"			context.font = Font;\n"
 "			YPos += HistogramHeight + 4 - BoxHeight;\n"
 "		}\n"
 "		else\n"
@@ -2409,10 +2424,16 @@ const char g_MicroProfileHtml_end_1[] =
 "	let MaxW = context.measureText(MaxText).width;\n"
 "	let pad = 2;\n"
 "	context.fillStyle = \'rgba(0,0,0,0.7)\';\n"
-"	context.fillRect(x, y, MinW + pad * 2, 10);\n"
+"	if(HistData.Min > 0)\n"
+"	{\n"
+"		context.fillRect(x, y, MinW + pad * 2, 10);\n"
+"	}\n"
 "	context.fillRect(x + w - MaxW - pad * 2, y, MaxW + pad * 2, 10);\n"
 "	context.fillStyle = \'#aaaaaa\';\n"
-"	context.fillText(MinText, x + pad, y + 8);\n"
+"	if(HistData.Min > 0)\n"
+"	{\n"
+"		context.fillText(MinText, x + pad, y + 8);\n"
+"	}\n"
 "	context.fillText(MaxText, x + w - MaxW - pad, y + 8);\n"
 "	context.font = Font;\n"
 "}\n"
@@ -2917,7 +2938,11 @@ const char g_MicroProfileHtml_end_1[] =
 "			context.fillText(S.GroupInfo[Timer.group].name, 1, YText);\n"
 "		}\n"
 "	}\n"
-"	if(SortColumn && Mode == ModeTimers)\n"
+"	if(S";
+
+const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
+const char g_MicroProfileHtml_end_2[] =
+"ortColumn && Mode == ModeTimers)\n"
 "	{\n"
 "		var OrderArray = new Array(S.TimerInfo.length);\n"
 "		var KeyArray = new Array(S.TimerInfo.length);\n"
@@ -2941,11 +2966,7 @@ const char g_MicroProfileHtml_end_1[] =
 "		var KeyFunc = null;\n"
 "		switch(SortColumn)\n"
 "		{\n"
-"			ca";
-
-const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
-const char g_MicroProfileHtml_end_2[] =
-"se 1: KeyFunc = function (a) { return S.TimerInfo[a].average; }; break;\n"
+"			case 1: KeyFunc = function (a) { return S.TimerInfo[a].average; }; break;\n"
 "			case 2: KeyFunc = function (a) { return S.TimerInfo[a].max; }; break;\n"
 "			case 3: KeyFunc = function (a) { return S.TimerInfo[a].total; }; break;\n"
 "			case 4: KeyFunc = function (a) { return S.TimerInfo[a].min; }; break;\n"
@@ -4146,7 +4167,11 @@ const char g_MicroProfileHtml_end_2[] =
 "												HasSetHover = 1;\n"
 "\n"
 "\n"
-"												if(Index == FilterSearchPassIndex)\n"
+"												if(Index == FilterSearchPa";
+
+const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
+const char g_MicroProfileHtml_end_3[] =
+"ssIndex)\n"
 "												{\n"
 "													console.log(\"kill this\");\n"
 "													let Range = RangeInit();\n"
@@ -4173,11 +4198,7 @@ const char g_MicroProfileHtml_end_2[] =
 "									}\n"
 "								}\n"
 "							}\n"
-"							D";
-
-const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
-const char g_MicroProfileHtml_end_3[] =
-"rawRange(Size-1, 0, Tree[Size-1].Length);\n"
+"							DrawRange(Size-1, 0, Tree[Size-1].Length);\n"
 "							// if tree is uneven, the tails won\'t have parents.\n"
 "							for(let i = Size-2; i >= 0; --i)\n"
 "							{\n"
@@ -5512,7 +5533,11 @@ const char g_MicroProfileHtml_end_3[] =
 "}\n"
 "function MoveFilterInputDiv(x, y, w)\n"
 "{\n"
-"	if(FilterInputDivPos.x != x || FilterInputDivPos.y != y || FilterInputDivPos.w != w)\n"
+"	if(FilterInputDivPos.x != x || FilterInputDivPos.y != y || Filte";
+
+const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
+const char g_MicroProfileHtml_end_4[] =
+"rInputDivPos.w != w)\n"
 "	{\n"
 "		FilterInputDivPos.x = x;\n"
 "		FilterInputDivPos.y = y;\n"
@@ -5544,11 +5569,7 @@ const char g_MicroProfileHtml_end_3[] =
 "			FilterInputMenuThreadsValue = FilterInputMenu.value;\n"
 "		}\n"
 "		else if(SubMenuActive == SubMenuGroups)\n"
-"		{";
-
-const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
-const char g_MicroProfileHtml_end_4[] =
-"\n"
+"		{\n"
 "			FilterInputMenuGroupsValue = FilterInputMenu.value;\n"
 "		}\n"
 "\n"
@@ -6899,7 +6920,11 @@ const char g_MicroProfileHtml_end_4[] =
 "		}\n"
 "		if(evt.keyCode == 32)\n"
 "		{\n"
-"			if(RangeSelect.Begin < RangeSelect.End)\n"
+"	";
+
+const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
+const char g_MicroProfileHtml_end_5[] =
+"		if(RangeSelect.Begin < RangeSelect.End)\n"
 "			{\n"
 "				ZoomToRange(RangeSelect);\n"
 "				RangeSelect = RangeInit();\n"
@@ -6929,11 +6954,7 @@ const char g_MicroProfileHtml_end_4[] =
 "					Token = RangeSelect.Index;\n"
 "				}\n"
 "				if(Token != -1)\n"
-"			";
-
-const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
-const char g_MicroProfileHtml_end_5[] =
-"	{\n"
+"				{\n"
 "					let Source = HoverTokenOwner ? HoverTokenOwner : S;\n"
 "					if(Token < Source.TimerInfo.length)\n"
 "					{\n"
@@ -8335,7 +8356,11 @@ const char g_MicroProfileHtml_end_5[] =
 "	for(let i in S.GroupInfo)\n"
 "	{\n"
 "		let widthname = context.measureText(S.TimerInfo[i].name).width;\n"
-"		S.GroupNameWidth = Math.max(S.GroupNameWidth, widthname);\n"
+"		S.GroupNameWidth = Math.max(S.G";
+
+const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
+const char g_MicroProfileHtml_end_6[] =
+"roupNameWidth, widthname);\n"
 "	}\n"
 "	for(let i in S.ThreadNames)\n"
 "	{\n"
@@ -8357,11 +8382,7 @@ const char g_MicroProfileHtml_end_5[] =
 "	Timeline.Names = S.TimelineNames;\n"
 "	Timeline.Ends = new Array(S.TimelineArray.length);\n"
 "	Timeline.Pairs = new Array(S.TimelineArray.length);\n"
-"	Timeline.SearchMatch =";
-
-const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
-const char g_MicroProfileHtml_end_6[] =
-" new Array(S.TimelineArray.length);\n"
+"	Timeline.SearchMatch = new Array(S.TimelineArray.length);\n"
 "	Timeline.Tracks = new Array();\n"
 "	Timeline.Positions = new Array();\n"
 "	for(var i = 0; i < Timeline.Times.length; ++i)\n"
