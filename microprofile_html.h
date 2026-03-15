@@ -2419,7 +2419,7 @@ const char g_MicroProfileHtml_end_1[] =
 "	// draw min/max labels with background for readability\n"
 "	context.font = \'8px monospace\';\n"
 "	let MinText = HistData.Min.toFixed(2);\n"
-"	let MaxText = HistData.Max.toFixed(2);\n"
+"	let MaxText = TimeToMsString(HistData.Max);\n"
 "	let MinW = context.measureText(MinText).width;\n"
 "	let MaxW = context.measureText(MaxText).width;\n"
 "	let pad = 2;\n"
@@ -2938,11 +2938,11 @@ const char g_MicroProfileHtml_end_1[] =
 "			context.fillText(S.GroupInfo[Timer.group].name, 1, YText);\n"
 "		}\n"
 "	}\n"
-"	if(S";
+"";
 
 const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
 const char g_MicroProfileHtml_end_2[] =
-"ortColumn && Mode == ModeTimers)\n"
+"	if(SortColumn && Mode == ModeTimers)\n"
 "	{\n"
 "		var OrderArray = new Array(S.TimerInfo.length);\n"
 "		var KeyArray = new Array(S.TimerInfo.length);\n"
@@ -4167,11 +4167,11 @@ const char g_MicroProfileHtml_end_2[] =
 "												HasSetHover = 1;\n"
 "\n"
 "\n"
-"												if(Index == FilterSearchPa";
+"												if(Index == FilterSea";
 
 const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
 const char g_MicroProfileHtml_end_3[] =
-"ssIndex)\n"
+"rchPassIndex)\n"
 "												{\n"
 "													console.log(\"kill this\");\n"
 "													let Range = RangeInit();\n"
@@ -5533,11 +5533,11 @@ const char g_MicroProfileHtml_end_3[] =
 "}\n"
 "function MoveFilterInputDiv(x, y, w)\n"
 "{\n"
-"	if(FilterInputDivPos.x != x || FilterInputDivPos.y != y || Filte";
+"	if(FilterInputDivPos.x != x || FilterInputDivPos.y != y || ";
 
 const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
 const char g_MicroProfileHtml_end_4[] =
-"rInputDivPos.w != w)\n"
+"FilterInputDivPos.w != w)\n"
 "	{\n"
 "		FilterInputDivPos.x = x;\n"
 "		FilterInputDivPos.y = y;\n"
@@ -6919,12 +6919,12 @@ const char g_MicroProfileHtml_end_4[] =
 "			FilterSearchReset();\n"
 "		}\n"
 "		if(evt.keyCode == 32)\n"
-"		{\n"
-"	";
+"";
 
 const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
 const char g_MicroProfileHtml_end_5[] =
-"		if(RangeSelect.Begin < RangeSelect.End)\n"
+"		{\n"
+"			if(RangeSelect.Begin < RangeSelect.End)\n"
 "			{\n"
 "				ZoomToRange(RangeSelect);\n"
 "				RangeSelect = RangeInit();\n"
@@ -8356,11 +8356,11 @@ const char g_MicroProfileHtml_end_5[] =
 "	for(let i in S.GroupInfo)\n"
 "	{\n"
 "		let widthname = context.measureText(S.TimerInfo[i].name).width;\n"
-"		S.GroupNameWidth = Math.max(S.G";
+"		S.GroupNameWidth = Math.ma";
 
 const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
 const char g_MicroProfileHtml_end_6[] =
-"roupNameWidth, widthname);\n"
+"x(S.GroupNameWidth, widthname);\n"
 "	}\n"
 "	for(let i in S.ThreadNames)\n"
 "	{\n"

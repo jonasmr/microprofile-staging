@@ -2401,7 +2401,7 @@ function DrawHistogram(context, HistData, Color, x, y, w, h)
 	// draw min/max labels with background for readability
 	context.font = '8px monospace';
 	let MinText = HistData.Min.toFixed(2);
-	let MaxText = HistData.Max.toFixed(2);
+	let MaxText = TimeToMsString(HistData.Max);
 	let MinW = context.measureText(MinText).width;
 	let MaxW = context.measureText(MaxText).width;
 	let pad = 2;
