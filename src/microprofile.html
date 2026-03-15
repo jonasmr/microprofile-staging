@@ -783,18 +783,14 @@ function ProfileModeDraw(Canvas)
 			if(idx == "Plot")
 				continue;
 			var Timer = ProfileData[idx];
-			StringArray.push(Timer.Name);
-			StringArray.push(Timer.Time + "ms");
-			StringArray.push("#");
-			StringArray.push("" + Timer.Count);
+			StringArray.push({label: Timer.Name, value: Timer.Time + "ms"});
+			StringArray.push({label: "#", value: "" + Timer.Count});
 		}
-		StringArray.push("debug");
-		StringArray.push(Debug);
+		StringArray.push({label: "debug", value: Debug});
 		var Time = new Date();
 		var Delta = Time - ProfileLastTimeStamp;
 		ProfileLastTimeStamp = Time;
-		StringArray.push("Frame Delta");
-		StringArray.push(Delta + "ms");
+		StringArray.push({label: "Frame Delta", value: Delta + "ms"});
 		if(ProfileMode == 2)
 		{
 			ProfileFpsAggr += Delta;
@@ -806,15 +802,11 @@ function ProfileModeDraw(Canvas)
 				ProfileFpsAggr = 0;
 				ProfileFpsCount = 0;
 			}
-			StringArray.push("FPS");
-			StringArray.push("" + ProfileFps.toFixed(2));
+			StringArray.push({label: "FPS", value: "" + ProfileFps.toFixed(2)});
 		}
-		StringArray.push("ProfileRedraw0");
-		StringArray.push("" + ProfileRedraw0);
-		StringArray.push("ProfileRedraw1");
-		StringArray.push("" + ProfileRedraw1);
-		StringArray.push("ProfileRedraw2");
-		StringArray.push("" + ProfileRedraw2);
+		StringArray.push({label: "ProfileRedraw0", value: "" + ProfileRedraw0});
+		StringArray.push({label: "ProfileRedraw1", value: "" + ProfileRedraw1});
+		StringArray.push({label: "ProfileRedraw2", value: "" + ProfileRedraw2});
 		ProfileRedraw0 = 0;
 		ProfileRedraw1 = 0;
 		ProfileRedraw2 = 0;
@@ -822,8 +814,7 @@ function ProfileModeDraw(Canvas)
 
 		for(var i = 0; i < ProfileData.Plot; ++i)
 		{
-			StringArray.push("");
-			StringArray.push(ProfileData.Plot[i]);
+			StringArray.push({label: "", value: ProfileData.Plot[i]});
 		}
 		ProfileData.Plot = Array();
 		DrawToolTip(StringArray, Canvas, 0, 200);
@@ -1799,6 +1790,10 @@ function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
 	ret.Total = {};
 	ret.Range = Range;
 	ret.LogIndex = LogIndex;
+	let TotalValues = [];
+	let TotalValuesExcl = [];
+	let ThreadValues = [];
+	let ThreadValuesExcl = [];
 
 	let TotalCallCount = 0;
 	let TotalCallCountExcl = 0;
@@ -1915,6 +1910,9 @@ function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
 								{
 									MaxExcl = TimeDeltaExcl;
 								}
+								TotalValuesExcl.push(TimeDeltaExcl);
+								if(LogIndex == nLog)
+									ThreadValuesExcl.push(TimeDeltaExcl);
 							}
 
 							if(TimerIsRoot && TimeDelta > 0)
@@ -1925,6 +1923,9 @@ function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
 								{
 									Max = TimeDelta;
 								}
+								TotalValues.push(TimeDelta);
+								if(LogIndex == nLog)
+									ThreadValues.push(TimeDelta);
 							}
 						}
 						if(StackPos > 0)
@@ -1959,6 +1960,10 @@ function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
 
 	SetValues(ret.Log, ThreadCallCount, ThreadCallCountExcl, ThreadSum, ThreadSumExcl, ThreadMax, ThreadMaxExcl);
 	SetValues(ret.Total, TotalCallCount, TotalCallCountExcl, TotalSum, TotalSumExcl, TotalMax,  TotalMaxExcl);
+	ret.Total.Values = TotalValues;
+	ret.Total.ValuesExcl = TotalValuesExcl;
+	ret.Log.Values = ThreadValues;
+	ret.Log.ValuesExcl = ThreadValuesExcl;
 	ProfileLeave();
 	return ret;
 }
@@ -2156,10 +2161,8 @@ function DrawDetailedFrameHistory()
 	if(FrameIndex>=0 && !MouseDragging)
 	{
 		var StringArray = [];
-		StringArray.push("Frame");
-		StringArray.push("" + FrameIndex);
-		StringArray.push("Time");
-		StringArray.push("" + (S.Frames[FrameIndex].frameend - S.Frames[FrameIndex].framestart).toFixed(3));
+		StringArray.push({label: "Frame", value: "" + FrameIndex});
+		StringArray.push({label: "Time", value: "" + (S.Frames[FrameIndex].frameend - S.Frames[FrameIndex].framestart).toFixed(3)});
 
 		DrawToolTip(StringArray, CanvasHistory, HistoryViewMouseX, HistoryViewMouseY+20);
 
@@ -2243,27 +2246,37 @@ function DrawDetailedBackground(context)
 
 }
 
-function DrawToolTip(StringArray, Canvas, x, y, bSecondary)
+var HistogramHeight = 40;
+var HistogramNumBuckets = 30;
+function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 {
 	var context = Canvas.getContext('2d');
 	context.font = Font;
-	var WidthArray = Array(StringArray.length);
+	var WidthArray = Array(Elements.length);
 	var nMaxWidth = 0;
 	var nHeight = 0;
-	for(i = 0; i < StringArray.length; i += 2)
+	for(i = 0; i < Elements.length; i++)
 	{
-		var nWidth0 = context.measureText(StringArray[i]).width;
-		var nWidth1 = context.measureText(StringArray[i+1]).width;
-		var nSum = nWidth0 + nWidth1;
-		WidthArray[i] = nWidth0;
-		WidthArray[i+1] = nWidth1;
-		if(nSum > nMaxWidth)
+		if(Elements[i].histogram)
 		{
-			nMaxWidth = nSum;
+			nHeight += HistogramHeight + 4;
+			WidthArray[i] = {label: 0, value: 0};
 		}
-		nHeight += BoxHeight;
+		else
+		{
+			var nWidth0 = context.measureText(Elements[i].label).width;
+			var nWidth1 = context.measureText(Elements[i].value).width;
+			var nSum = nWidth0 + nWidth1;
+			WidthArray[i] = {label: nWidth0, value: nWidth1};
+			if(nSum > nMaxWidth)
+			{
+				nMaxWidth = nSum;
+			}
+			nHeight += BoxHeight;
+		}
 	}
 	nMaxWidth += 15;
+	nMaxWidth = Math.max(nMaxWidth, HistogramNumBuckets * 4 + 10);
 	//bounds check.
 	if(!bSecondary)
 	{
@@ -2284,125 +2297,170 @@ function DrawToolTip(StringArray, Canvas, x, y, bSecondary)
 	}
 	context.fillStyle = 'black';
 	context.fillRect(x-1, y, nMaxWidth+2, nHeight);
-	context.fillStyle = 'white';
 
 	var XPos = x;
 	var XPosRight = x + nMaxWidth;
 	var YPos = y + BoxHeight-2;
-	for(i = 0; i < StringArray.length; i += 2)
+	for(i = 0; i < Elements.length; i++)
 	{
-		context.fillText(StringArray[i], XPos, YPos);
-		context.fillText(StringArray[i+1], XPosRight - WidthArray[i+1], YPos);
+		if(Elements[i].histogram)
+		{
+			DrawHistogram(context, Elements[i].histogram, Elements[i].color || 'cyan', XPos + 2, YPos - BoxHeight + 4, nMaxWidth - 4, HistogramHeight);
+			YPos += HistogramHeight + 4 - BoxHeight;
+		}
+		else
+		{
+			context.fillStyle = Elements[i].color || 'white';
+			context.fillText(Elements[i].label, XPos, YPos);
+			context.fillText(Elements[i].value, XPosRight - WidthArray[i].value, YPos);
+		}
 		YPos += BoxHeight;
 	}
 	return {"x":x, "y":y};
+}
+
+function DrawHistogram(context, Values, Color, x, y, w, h)
+{
+	if(!Values || Values.length == 0)
+		return;
+	let nNumBuckets = HistogramNumBuckets;
+	let Min = Values[0];
+	let Max = Values[0];
+	for(let i = 1; i < Values.length; ++i)
+	{
+		if(Values[i] < Min) Min = Values[i];
+		if(Values[i] > Max) Max = Values[i];
+	}
+	let Range = Max - Min;
+	if(Range < 0.0001)
+		Range = 0.0001;
+	let Buckets = new Array(nNumBuckets);
+	for(let i = 0; i < nNumBuckets; ++i)
+		Buckets[i] = 0;
+	for(let i = 0; i < Values.length; ++i)
+	{
+		let idx = Math.floor(((Values[i] - Min) / Range) * (nNumBuckets - 1));
+		Buckets[idx]++;
+	}
+	let BucketMax = 0;
+	for(let i = 0; i < nNumBuckets; ++i)
+		if(Buckets[i] > BucketMax) BucketMax = Buckets[i];
+	if(BucketMax == 0) BucketMax = 1;
+
+	// draw background
+	context.fillStyle = '#181818';
+	context.fillRect(x, y, w, h);
+
+	// draw bars
+	let BarWidth = w / nNumBuckets;
+	context.fillStyle = Color;
+	for(let i = 0; i < nNumBuckets; ++i)
+	{
+		let BarHeight = (Buckets[i] / BucketMax) * (h - 2);
+		if(Buckets[i] > 0 && BarHeight < 1)
+			BarHeight = 1;
+		context.fillRect(x + i * BarWidth, y + h - BarHeight, BarWidth - 1, BarHeight);
+	}
+
+	// draw min/max labels with background for readability
+	context.font = '8px monospace';
+	let MinText = Min.toFixed(2);
+	let MaxText = Max.toFixed(2);
+	let MinW = context.measureText(MinText).width;
+	let MaxW = context.measureText(MaxText).width;
+	let pad = 2;
+	context.fillStyle = 'rgba(0,0,0,0.7)';
+	context.fillRect(x, y, MinW + pad * 2, 10);
+	context.fillRect(x + w - MaxW - pad * 2, y, MaxW + pad * 2, 10);
+	context.fillStyle = '#aaaaaa';
+	context.fillText(MinText, x + pad, y + 8);
+	context.fillText(MaxText, x + w - MaxW - pad, y + 8);
+	context.font = Font;
 }
 
 function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, SelectedRangeCpu, SelectedRangeGpu, RangeAggr)
 {
 	let StringArray = [];
 	let groupid = So.TimerInfo[nHoverToken].group;
-	
+
 	if(S2 && S2.AA)
 	{
-		StringArray.push("Capture");
-		StringArray.push(So == S ? "Main" : "Other");
+		StringArray.push({label: "Capture", value: So == S ? "Main" : "Other"});
 	}
 
 	if(nHoverToken > -1)
 	{
-		StringArray.push("Timer");
-		StringArray.push(So.TimerInfo[nHoverToken].name);
-		StringArray.push("Group");
-		StringArray.push(So.GroupInfo[groupid].name);
+		StringArray.push({label: "Timer", value: So.TimerInfo[nHoverToken].name});
+		StringArray.push({label: "Group", value: So.GroupInfo[groupid].name});
 	}
 	else
 	{
-		StringArray.push("");
-		StringArray.push("");
-		StringArray.push("");
-		StringArray.push("");
+		StringArray.push({label: "", value: ""});
+		StringArray.push({label: "", value: ""});
 	}
-	StringArray.push("");
-	StringArray.push("");
+	StringArray.push({label: "", value: ""});
 
 	if(RangeValid(SelectedRangeGpu))
 	{
-		StringArray.push("GPU Time");
-		StringArray.push((SelectedRangeGpu.End-SelectedRangeGpu.Begin).toFixed(3));
+		StringArray.push({label: "GPU Time", value: (SelectedRangeGpu.End-SelectedRangeGpu.Begin).toFixed(3)});
 	}
 	else if(RangeValid(SelectedRangeCpu))
 	{
-
-		StringArray.push("CPU Time");
-		StringArray.push((SelectedRangeCpu.End-SelectedRangeCpu.Begin).toFixed(3));
+		StringArray.push({label: "CPU Time", value: (SelectedRangeCpu.End-SelectedRangeCpu.Begin).toFixed(3)});
 	}
 	else
 	{
-		StringArray.push("");
-		StringArray.push("");
+		StringArray.push({label: "", value: ""});
 	}
 
-	StringArray.push("");
-	StringArray.push("");
+	StringArray.push({label: "", value: ""});
 
-	let Add = function(Src)
+	let Add = function(Src, Color)
 	{
-		StringArray.push("Total");
-		StringArray.push("" + Src.Sum);
-		StringArray.push("Max");
-		StringArray.push("" + Src.Max);
-		StringArray.push("Average");
-		StringArray.push("" + Src.Average);
-		StringArray.push("Count");
-		StringArray.push("" + Src.CallCount);
-		StringArray.push("Excl Total");
-		StringArray.push("" + Src.SumExcl);
-		StringArray.push("Excl Max");
-		StringArray.push("" + Src.MaxExcl);
-		StringArray.push("Excl Average");
-		StringArray.push("" + Src.AverageExcl);
-		StringArray.push("Excl Count");
-		StringArray.push("" + Src.CallCountExcl);
+		StringArray.push({label: "Total", value: "" + Src.Sum, color:Color});
+		StringArray.push({label: "Max", value: "" + Src.Max, color:Color});
+		StringArray.push({label: "Average", value: "" + Src.Average, color:Color});
+		StringArray.push({label: "Count", value: "" + Src.CallCount, color:Color});
+		StringArray.push({label: "Excl Total", value: "" + Src.SumExcl, color:Color});
+		StringArray.push({label: "Excl Max", value: "" + Src.MaxExcl, color:Color});
+		StringArray.push({label: "Excl Average", value: "" + Src.AverageExcl, color:Color});
+		StringArray.push({label: "Excl Count", value: "" + Src.CallCountExcl, color:Color});
 	};
 	if(RangeAggr)
 	{
-		StringArray.push("[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]");
-		StringArray.push("All");
-		Add(RangeAggr.Total);
-		StringArray.push("");
-		StringArray.push("");
-		StringArray.push("[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]");
-		StringArray.push(So.ThreadNames[RangeAggr.LogIndex]);
-		Add(RangeAggr.Log);
+		const RANGE_COLOR = 'cyan';
+		StringArray.push({label: "[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]", value: "All", color: RANGE_COLOR});
+		Add(RangeAggr.Total, RANGE_COLOR);
+		if(RangeAggr.Total.Values && RangeAggr.Total.Values.length > 1)
+		{
+			StringArray.push({histogram: RangeAggr.Total.Values, color: RANGE_COLOR});
+		}
+		StringArray.push({label: "", value: "", color: RANGE_COLOR});
+		StringArray.push({label: "[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]", value: So.ThreadNames[RangeAggr.LogIndex], color: RANGE_COLOR});
+		Add(RangeAggr.Log, RANGE_COLOR);
+		if(RangeAggr.Log.Values && RangeAggr.Log.Values.length > 1)
+		{
+			StringArray.push({histogram: RangeAggr.Log.Values, color: RANGE_COLOR});
+		}
 	}
 	else
 	{
 		if(RangeValid(SelectedRangeGpu))
 		{
-			StringArray.push("");
-			StringArray.push("");
-			StringArray.push("GPU Aggregates");
-			StringArray.push("");
+			StringArray.push({label: "", value: ""});
+			StringArray.push({label: "GPU Aggregates", value: ""});
 		}
 		Add(So.TimerInfo[nHoverToken]);
 	}
 
-	StringArray.push("");
-	StringArray.push("");
-	StringArray.push("Max/Frame");
-	StringArray.push("" + So.TimerInfo[nHoverToken].FrameMax);
-	StringArray.push("Average Time/Frame");
-	StringArray.push("" + So.TimerInfo[nHoverToken].FrameAverage);
-	StringArray.push("Average Count/Frame");
-	StringArray.push("" + So.TimerInfo[nHoverToken].FrameCallAverage);
+	StringArray.push({label: "", value: ""});
+	StringArray.push({label: "Max/Frame", value: "" + So.TimerInfo[nHoverToken].FrameMax});
+	StringArray.push({label: "Average Time/Frame", value: "" + So.TimerInfo[nHoverToken].FrameAverage});
+	StringArray.push({label: "Average Count/Frame", value: "" + So.TimerInfo[nHoverToken].FrameCallAverage});
 
-	StringArray.push("");
-	StringArray.push("");
-	StringArray.push("Excl Max/Frame");
-	StringArray.push("" + So.TimerInfo[nHoverToken].FrameMaxExcl);
-	StringArray.push("Excl Average Time/Frame");
-	StringArray.push("" + So.TimerInfo[nHoverToken].FrameAverageExcl);
+	StringArray.push({label: "", value: ""});
+	StringArray.push({label: "Excl Max/Frame", value: "" + So.TimerInfo[nHoverToken].FrameMaxExcl});
+	StringArray.push({label: "Excl Average Time/Frame", value: "" + So.TimerInfo[nHoverToken].FrameAverageExcl});
 
 
 	let Time = fDetailedOffset + fDetailedRange * (DetailedViewMouseX / nWidth);
@@ -2411,15 +2469,10 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 	let FrameTime = new Object();
 	let Frame = CalculateTimers2(FrameTime, nHoverToken, Time, S);
 
-	StringArray.push("");
-	StringArray.push("");
-
-	StringArray.push("Detailed Capture");
-	StringArray.push("");
-	StringArray.push("Frames");
-	StringArray.push(So.Frames.length);
-	StringArray.push("Time");
-	StringArray.push(DetailedTotal(So).toFixed(2) + "ms");
+	StringArray.push({label: "", value: ""});
+	StringArray.push({label: "Detailed Capture", value: ""});
+	StringArray.push({label: "Frames", value: "" + So.Frames.length});
+	StringArray.push({label: "Time", value: DetailedTotal(So).toFixed(2) + "ms"});
 	return StringArray;
 }
 
@@ -2458,47 +2511,29 @@ function DrawHoverToolTip()
 		if(bShowTimers)
 		{
 			let groupid = S.TimerInfo[nHoverToken].group;
-			StringArray.push("Timer");
-			StringArray.push(S.TimerInfo[nHoverToken].name);
-			StringArray.push("Group");
-			StringArray.push(S.GroupInfo[groupid].name);
+			StringArray.push({label: "Timer", value: S.TimerInfo[nHoverToken].name});
+			StringArray.push({label: "Group", value: S.GroupInfo[groupid].name});
 
-			StringArray.push("");
-			StringArray.push("");
+			StringArray.push({label: "", value: ""});
 			let Timer = S.TimerInfo[nHoverToken];
-			StringArray.push("Average");
-			StringArray.push(Timer.average);
-			StringArray.push("Max");
-			StringArray.push(Timer.max);
-			StringArray.push("Excl Max");
-			StringArray.push(Timer.exclmax);
-			StringArray.push("Excl Average");
-			StringArray.push(Timer.exclaverage);
-			StringArray.push("Call Average");
-			StringArray.push(Timer.callaverage);
-			StringArray.push("Call Count");
-			StringArray.push(Timer.callcount);
+			StringArray.push({label: "Average", value: Timer.average});
+			StringArray.push({label: "Max", value: Timer.max});
+			StringArray.push({label: "Excl Max", value: Timer.exclmax});
+			StringArray.push({label: "Excl Average", value: Timer.exclaverage});
+			StringArray.push({label: "Call Average", value: Timer.callaverage});
+			StringArray.push({label: "Call Count", value: Timer.callcount});
 
-			StringArray.push("");
-			StringArray.push("");
+			StringArray.push({label: "", value: ""});
 
+			StringArray.push({label: "Group", value: S.GroupInfo[groupid].name});
+			StringArray.push({label: "Average", value: S.GroupInfo[groupid].average});
+			StringArray.push({label: "Max", value: S.GroupInfo[groupid].max});
 
-			StringArray.push("Group");
-			StringArray.push(S.GroupInfo[groupid].name);
-			StringArray.push("Average");
-			StringArray.push(S.GroupInfo[groupid].average);
-			StringArray.push("Max");
-			StringArray.push(S.GroupInfo[groupid].max);
+			StringArray.push({label: "", value: ""});
 
-			StringArray.push("");
-			StringArray.push("");
-
-			StringArray.push("Timer Capture");
-			StringArray.push("");
-			StringArray.push("Frames");
-			StringArray.push(S.AggregateInfo.Frames);
-			StringArray.push("Time");
-			StringArray.push(S.AggregateInfo.Time.toFixed(2) + "ms");
+			StringArray.push({label: "Timer Capture", value: ""});
+			StringArray.push({label: "Frames", value: S.AggregateInfo.Frames});
+			StringArray.push({label: "Time", value: S.AggregateInfo.Time.toFixed(2) + "ms"});
 
 
 		}
@@ -2544,18 +2579,12 @@ function DrawHoverToolTip()
 	else if(nHoverCSCpu >= 0)
 	{
 		StringArray = [];
-		StringArray.push("Context Switch");
-		StringArray.push("");
-		StringArray.push("");
-		StringArray.push("");
-		StringArray.push("Cpu");
-		StringArray.push("" + nHoverCSCpu);
-		StringArray.push("EfficiencyClass");
-		StringArray.push("" + S.CoreEfficiencyClass[nHoverCSCpu]);
-		StringArray.push("Begin");
-		StringArray.push("" + RangeCpuLocked.Begin);
-		StringArray.push("End");
-		StringArray.push("" + RangeCpuLocked.End);
+		StringArray.push({label: "Context Switch", value: ""});
+		StringArray.push({label: "", value: ""});
+		StringArray.push({label: "Cpu", value: "" + nHoverCSCpu});
+		StringArray.push({label: "EfficiencyClass", value: "" + S.CoreEfficiencyClass[nHoverCSCpu]});
+		StringArray.push({label: "Begin", value: "" + RangeCpuLocked.Begin});
+		StringArray.push({label: "End", value: "" + RangeCpuLocked.End});
 		if(ToolTipCorner)
 		{
 			DrawToolTip(StringArray, CanvasDetailedView, nWidth, nHeight);
@@ -4877,8 +4906,7 @@ function DrawGraph(context, Parameters, data, Mouse)
 		{
 			let LocalElement = data[dataindex];
 			let Samples = LocalElement.Samples;
-			ToolTipImmediate.push(LocalElement.Name);
-			ToolTipImmediate.push(FormatTime(Samples[MouseIndex])+ Parameters.Ext);
+			ToolTipImmediate.push({label: LocalElement.Name, value: FormatTime(Samples[MouseIndex])+ Parameters.Ext, color: LocalElement.Color});
 		}
 	}
 
