@@ -106,6 +106,10 @@ typedef uint32_t MicroProfileTimelineToken;
 	do                                                                                                                                                                                                 \
 	{                                                                                                                                                                                                  \
 	} while(0)
+#define MICROPROFILE_SCOPE_FUNC(group)                                                                                                                                                        \
+	do                                                                                                                                                                                                 \
+	{                                                                                                                                                                                                  \
+	} while(0)
 #define MICROPROFILE_SCOPE_CSTR(cstr)                                                                                                                                                                  \
 	do                                                                                                                                                                                                 \
 	{                                                                                                                                                                                                  \
@@ -587,6 +591,9 @@ typedef void (*MicroProfileOnFreeze)(int nFrozen);
 #define MICROPROFILE_SCOPE_TOKEN(token) MicroProfileScopeHandler MICROPROFILE_TOKEN_PASTE(foo, __LINE__)(token)
 #define MICROPROFILE_SCOPEI(group, name, color)                                                                                                                                                        \
 	static MicroProfileToken MICROPROFILE_TOKEN_PASTE(g_mp, __LINE__) = MicroProfileGetToken(group, name, color, MicroProfileTokenTypeCpu, 0);                                                         \
+	MicroProfileScopeHandler MICROPROFILE_TOKEN_PASTE(foo, __LINE__)(MICROPROFILE_TOKEN_PASTE(g_mp, __LINE__))
+#define MICROPROFILE_SCOPE_FUNC(group)                                                                                                                                                        \
+	static MicroProfileToken MICROPROFILE_TOKEN_PASTE(g_mp, __LINE__) = MicroProfileGetToken(group, __FUNCTION__, MP_AUTO, MicroProfileTokenTypeCpu, 0);                                                         \
 	MicroProfileScopeHandler MICROPROFILE_TOKEN_PASTE(foo, __LINE__)(MICROPROFILE_TOKEN_PASTE(g_mp, __LINE__))
 #define MICROPROFILE_SCOPE_CSTR(CStr) MicroProfileScopeHandlerCStr MICROPROFILE_TOKEN_PASTE(foo, __LINE__)(CStr)
 
