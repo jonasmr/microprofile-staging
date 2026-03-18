@@ -1772,10 +1772,13 @@ function GetTimerValueInRange(S, Range, TimerIndex, LogIndex)
 	let RangeEnd = Range.End;
 	let nFrameStart = 0;
 	let nFrameEnd = S.Frames.length-1;
-	while(nFrameStart < nFrameEnd && S.Frames[nFrameStart].frameend < RangeStart)
+	const isGpu = S.GroupInfo[S.TimerInfo[TimerIndex].group].isgpu;
+
+	while(nFrameStart < nFrameEnd && (isGpu ? S.Frames[nFrameStart].frameendgpu : S.Frames[nFrameStart].frameend) < RangeStart)
 		nFrameStart++;
-	while(nFrameStart+1 < nFrameEnd && S.Frames[nFrameEnd].framestart > RangeEnd)
+	while(nFrameStart+1 < nFrameEnd && (isGpu ? S.Frames[nFrameStart].framestartgpu :S.Frames[nFrameEnd].framestart) > RangeEnd)
 		nFrameEnd--;
+
 	nFrameEnd++;
 
 	let FrameCount = nFrameEnd - nFrameStart;

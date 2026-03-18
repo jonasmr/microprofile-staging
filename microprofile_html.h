@@ -1790,10 +1790,13 @@ const char g_MicroProfileHtml_end_1[] =
 "	let RangeEnd = Range.End;\n"
 "	let nFrameStart = 0;\n"
 "	let nFrameEnd = S.Frames.length-1;\n"
-"	while(nFrameStart < nFrameEnd && S.Frames[nFrameStart].frameend < RangeStart)\n"
+"	const isGpu = S.GroupInfo[S.TimerInfo[TimerIndex].group].isgpu;\n"
+"\n"
+"	while(nFrameStart < nFrameEnd && (isGpu ? S.Frames[nFrameStart].frameendgpu : S.Frames[nFrameStart].frameend) < RangeStart)\n"
 "		nFrameStart++;\n"
-"	while(nFrameStart+1 < nFrameEnd && S.Frames[nFrameEnd].framestart > RangeEnd)\n"
+"	while(nFrameStart+1 < nFrameEnd && (isGpu ? S.Frames[nFrameStart].framestartgpu :S.Frames[nFrameEnd].framestart) > RangeEnd)\n"
 "		nFrameEnd--;\n"
+"\n"
 "	nFrameEnd++;\n"
 "\n"
 "	let FrameCount = nFrameEnd - nFrameStart;\n"
@@ -2930,7 +2933,11 @@ const char g_MicroProfileHtml_end_1[] =
 "		context.fillRect(0, Y, NameWidth, Height);\n"
 "		context.textAlign = \'right\';\n"
 "		context.fillStyle = Color;\n"
-"		context.fillText(Timer.name, NameWidth - 5, YText);\n"
+"		context.fillText(Timer.name, NameWidth - 5,";
+
+const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
+const char g_MicroProfileHtml_end_2[] =
+" YText);\n"
 "		context.textAlign = \'left\';\n"
 "		if(showgroup)\n"
 "		{\n"
@@ -2938,10 +2945,6 @@ const char g_MicroProfileHtml_end_1[] =
 "			context.fillText(S.GroupInfo[Timer.group].name, 1, YText);\n"
 "		}\n"
 "	}\n"
-"";
-
-const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
-const char g_MicroProfileHtml_end_2[] =
 "	if(SortColumn && Mode == ModeTimers)\n"
 "	{\n"
 "		var OrderArray = new Array(S.TimerInfo.length);\n"
@@ -4161,17 +4164,17 @@ const char g_MicroProfileHtml_end_2[] =
 "												}\n"
 "												nHoverTokenNext = Index;\n"
 "												nHoverTokenStack = r;\n"
-"												nHoverTokenIndexNext = TreeLevel.Source[j];\n"
+"												nHoverTokenIndexNext = TreeLe";
+
+const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
+const char g_MicroProfileHtml_end_3[] =
+"vel.Source[j];\n"
 "												nHoverTokenLogIndexNext = nLog;\n"
 "												HoverTokenNextOwner = S;\n"
 "												HasSetHover = 1;\n"
 "\n"
 "\n"
-"												if(Index == FilterSea";
-
-const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
-const char g_MicroProfileHtml_end_3[] =
-"rchPassIndex)\n"
+"												if(Index == FilterSearchPassIndex)\n"
 "												{\n"
 "													console.log(\"kill this\");\n"
 "													let Range = RangeInit();\n"
@@ -5527,17 +5530,17 @@ const char g_MicroProfileHtml_end_3[] =
 "		FilterInputMenuDivPos.y = y;\n"
 "		FilterInputMenuDivPos.w = w;\n"
 "		FilterInputMenuDiv.style[\'left\'] = x + \'px\';\n"
-"		FilterInputMenuDiv.style[\'top\'] = y + \'px\';\n"
+"		FilterInputMenuDiv.style[\'top\'] =";
+
+const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
+const char g_MicroProfileHtml_end_4[] =
+" y + \'px\';\n"
 "		FilterInputMenu.style[\'width\'] = w + \'px\';\n"
 "	}\n"
 "}\n"
 "function MoveFilterInputDiv(x, y, w)\n"
 "{\n"
-"	if(FilterInputDivPos.x != x || FilterInputDivPos.y != y || ";
-
-const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
-const char g_MicroProfileHtml_end_4[] =
-"FilterInputDivPos.w != w)\n"
+"	if(FilterInputDivPos.x != x || FilterInputDivPos.y != y || FilterInputDivPos.w != w)\n"
 "	{\n"
 "		FilterInputDivPos.x = x;\n"
 "		FilterInputDivPos.y = y;\n"
@@ -6911,7 +6914,11 @@ const char g_MicroProfileHtml_end_4[] =
 "		if(evt.keyCode == 187)\n"
 "		{\n"
 "			DrawDetailedFlameMode = (DrawDetailedFlameMode+1) % 3;\n"
-"			FilterSearchReset();\n"
+"			FilterSe";
+
+const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
+const char g_MicroProfileHtml_end_5[] =
+"archReset();\n"
 "		}\n"
 "		if(evt.keyCode == 189)\n"
 "		{\n"
@@ -6919,10 +6926,6 @@ const char g_MicroProfileHtml_end_4[] =
 "			FilterSearchReset();\n"
 "		}\n"
 "		if(evt.keyCode == 32)\n"
-"";
-
-const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
-const char g_MicroProfileHtml_end_5[] =
 "		{\n"
 "			if(RangeSelect.Begin < RangeSelect.End)\n"
 "			{\n"
@@ -8351,16 +8354,16 @@ const char g_MicroProfileHtml_end_5[] =
 "		let widthname = context.measureText(S.TimerInfo[i].name).width;\n"
 "		S.TimerInfo[i].wtotal = width;\n"
 "		S.TimerInfo[i].w = widthname;\n"
-"		S.TimerNameWidth = Math.max(S.TimerNameWidth, widthname);\n"
+"		S.TimerNameWidth = Math.m";
+
+const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
+const char g_MicroProfileHtml_end_6[] =
+"ax(S.TimerNameWidth, widthname);\n"
 "	}\n"
 "	for(let i in S.GroupInfo)\n"
 "	{\n"
 "		let widthname = context.measureText(S.TimerInfo[i].name).width;\n"
-"		S.GroupNameWidth = Math.ma";
-
-const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
-const char g_MicroProfileHtml_end_6[] =
-"x(S.GroupNameWidth, widthname);\n"
+"		S.GroupNameWidth = Math.max(S.GroupNameWidth, widthname);\n"
 "	}\n"
 "	for(let i in S.ThreadNames)\n"
 "	{\n"
