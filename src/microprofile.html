@@ -309,6 +309,7 @@ function GetColorIndex(color)
 }
 //color index 0 reserved for blinking
 var cidhovercolor = 0;
+let g_HoverColor = "#777777";
 g_Colors.push('#000000');
 g_ColorsDark.push('#000000');
 g_ColorsTextIndex.push(0);
@@ -2330,8 +2331,7 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 			let HistX = XPos + HistLabelW;
 			let HistY = YPos - BoxHeight + 4;
 			let HistW = nMaxWidth - HistLabelW - 2;
-			DrawHistogram(context, Elements[i].histogram, Elements[i].color || 'cyan', HistX, HistY, HistW, HistogramHeight);
-			// draw bucket max count label to the left
+			DrawHistogram(context, Elements[i].histogram, Elements[i].duration, Elements[i].color || 'cyan', HistX, HistY, HistW, HistogramHeight);
 			context.fillStyle = '#aaaaaa';
 			context.font = '8px monospace';
 			context.fillText("" + Elements[i].histogram.BucketMax, XPos + 1, HistY + 8);
@@ -2348,6 +2348,26 @@ function DrawToolTip(Elements, Canvas, x, y, bSecondary)
 	}
 	return {"x":x, "y":y};
 }
+
+function HistogramBucket(Min, Max, nNumBuckets, Value)
+{
+	if(Value < Min)
+		Value = Min;
+	if(Value > Max)
+		Value = Max;
+	BucketWidth = (Max - Min) / nNumBuckets;
+
+	if (Value == Max)
+		return nNumBuckets - 1;
+
+	Bucket = Math.floor((Value - Min) / BucketWidth);
+	if (Bucket < 0)
+		Bucket = 0;
+	else if (Bucket >= nNumBuckets)
+		Bucket = nNumBuckets - 1;
+	return Bucket;
+}
+
 
 function BuildHistogramData(Values)
 {
@@ -2371,7 +2391,7 @@ function BuildHistogramData(Values)
 		Buckets[i] = 0;
 	for(let i = 0; i < Values.length; ++i)
 	{
-		let idx = Math.floor(((Values[i] - Min) / Range) * (nNumBuckets - 1));
+		let idx = HistogramBucket(Min, Max, nNumBuckets, Values[i]);
 		Buckets[idx]++;
 	}
 	let BucketMax = 0;
@@ -2381,7 +2401,7 @@ function BuildHistogramData(Values)
 	return {Buckets: Buckets, BucketMax: BucketMax, Min: Min, Max: Max, NumBuckets: nNumBuckets};
 }
 
-function DrawHistogram(context, HistData, Color, x, y, w, h)
+function DrawHistogram(context, HistData, Duration, Color, x, y, w, h)
 {
 	if(!HistData)
 		return;
@@ -2393,12 +2413,22 @@ function DrawHistogram(context, HistData, Color, x, y, w, h)
 	// draw bars
 	let BarWidth = w / HistData.NumBuckets;
 	context.fillStyle = Color;
+	let HistRange = HistData.Max - HistData.Min;
+	
+	let BucketIndex = Math.min(HistData.NumBuckets-1, HistogramBucket(HistData.Min, HistData.Max, HistData.NumBuckets, Duration)); 
+
 	for(let i = 0; i < HistData.NumBuckets; ++i)
 	{
-		let BarHeight = (HistData.Buckets[i] / HistData.BucketMax) * (h - 2);
+		let BarHeight = (HistData.Buckets[i] / HistData.BucketMax) * (h - 2)
+		let Active = BucketIndex == i;
 		if(HistData.Buckets[i] > 0 && BarHeight < 1)
 			BarHeight = 1;
+
+		if(Active)
+			context.fillStyle = g_HoverColor;
 		context.fillRect(x + i * BarWidth, y + h - BarHeight, BarWidth - 1, BarHeight);
+		if(Active)
+			context.fillStyle = Color;
 	}
 
 	// draw min/max labels with background for readability
@@ -2445,13 +2475,17 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 	}
 	StringArray.push({label: "", value: ""});
 
+
+	let Duration = -1;
 	if(RangeValid(SelectedRangeGpu))
 	{
-		StringArray.push({label: "GPU Time", value: (SelectedRangeGpu.End-SelectedRangeGpu.Begin).toFixed(3)});
+		Duration = SelectedRangeGpu.End-SelectedRangeGpu.Begin;
+		StringArray.push({label: "GPU Time", value: (Duration).toFixed(3)});
 	}
 	else if(RangeValid(SelectedRangeCpu))
 	{
-		StringArray.push({label: "CPU Time", value: (SelectedRangeCpu.End-SelectedRangeCpu.Begin).toFixed(3)});
+		Duration = SelectedRangeCpu.End-SelectedRangeCpu.Begin;
+		StringArray.push({label: "CPU Time", value: (Duration).toFixed(3)});
 	}
 	else
 	{
@@ -2460,11 +2494,11 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 
 	StringArray.push({label: "", value: ""});
 	let HistogramColor = g_Colors[So.TimerInfo[nHoverToken].cid];
-	let Add = function(Src, Color)
+	let Add = function(Src, Duration, Color)
 	{
 		if(Src.HistogramData)
 		{
-			StringArray.push({histogram: Src.HistogramData, color:HistogramColor});
+			StringArray.push({histogram: Src.HistogramData, color:HistogramColor, duration:Duration});
 		}
 	
 		StringArray.push({label: "Total", value: "" + Src.Sum, color:Color});
@@ -2480,27 +2514,20 @@ function BuildToolTipDetailed(So, nHoverToken, HoverTokenOwner, bSecond, Selecte
 	{
 		const RANGE_COLOR = 'cyan';
 		StringArray.push({label: "[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]", value: "All", color: RANGE_COLOR});
-		// if(RangeAggr.Total.HistogramData)
-		// {
-		// 	StringArray.push({histogram: RangeAggr.Total.HistogramData, color: RANGE_COLOR});
-		// }
-		Add(RangeAggr.Total, RANGE_COLOR);
+		Add(RangeAggr.Total, Duration, RANGE_COLOR);
 		StringArray.push({label: "", value: "", color: RANGE_COLOR});
 		StringArray.push({label: "[" + RangeAggr.Range.Begin.toFixed(2) + "-" + RangeAggr.Range.End.toFixed(2) + "]", value: So.ThreadNames[RangeAggr.LogIndex], color: RANGE_COLOR});
-		// if(RangeAggr.Log.HistogramData)
-		// {
-		// 	StringArray.push({histogram: RangeAggr.Log.HistogramData, color: RANGE_COLOR});
-		// }
-		Add(RangeAggr.Log, RANGE_COLOR);
+		Add(RangeAggr.Log, Duration, RANGE_COLOR);
 	}
 	else
 	{
+		Add(So.TimerInfo[nHoverToken], Duration);
+
 		if(RangeValid(SelectedRangeGpu))
 		{
 			StringArray.push({label: "", value: ""});
 			StringArray.push({label: "GPU Aggregates", value: ""});
 		}
-		Add(So.TimerInfo[nHoverToken]);
 	}
 
 	StringArray.push({label: "", value: ""});
@@ -4493,6 +4520,7 @@ function DrawDetailedView(S, S0, context, MinWidth, bDrawEnabled)
 								return ConvertHslToColor(H, S, L);
 							};
 							let ColorCV = f();
+							g_HoverColor = ColorCV;
 							ColorDark = Color = ColorCV; ;
 						}
 					}

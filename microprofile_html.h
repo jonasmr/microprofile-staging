@@ -312,6 +312,7 @@ const char g_MicroProfileHtml_begin_0[] =
 "}\n"
 "//color index 0 reserved for blinking\n"
 "var cidhovercolor = 0;\n"
+"let g_HoverColor = \"#777777\";\n"
 "g_Colors.push(\'#000000\');\n"
 "g_ColorsDark.push(\'#000000\');\n"
 "g_ColorsTextIndex.push(0);\n"
@@ -2348,8 +2349,7 @@ const char g_MicroProfileHtml_end_1[] =
 "			let HistX = XPos + HistLabelW;\n"
 "			let HistY = YPos - BoxHeight + 4;\n"
 "			let HistW = nMaxWidth - HistLabelW - 2;\n"
-"			DrawHistogram(context, Elements[i].histogram, Elements[i].color || \'cyan\', HistX, HistY, HistW, HistogramHeight);\n"
-"			// draw bucket max count label to the left\n"
+"			DrawHistogram(context, Elements[i].histogram, Elements[i].duration, Elements[i].color || \'cyan\', HistX, HistY, HistW, HistogramHeight);\n"
 "			context.fillStyle = \'#aaaaaa\';\n"
 "			context.font = \'8px monospace\';\n"
 "			context.fillText(\"\" + Elements[i].histogram.BucketMax, XPos + 1, HistY + 8);\n"
@@ -2366,6 +2366,26 @@ const char g_MicroProfileHtml_end_1[] =
 "	}\n"
 "	return {\"x\":x, \"y\":y};\n"
 "}\n"
+"\n"
+"function HistogramBucket(Min, Max, nNumBuckets, Value)\n"
+"{\n"
+"	if(Value < Min)\n"
+"		Value = Min;\n"
+"	if(Value > Max)\n"
+"		Value = Max;\n"
+"	BucketWidth = (Max - Min) / nNumBuckets;\n"
+"\n"
+"	if (Value == Max)\n"
+"		return nNumBuckets - 1;\n"
+"\n"
+"	Bucket = Math.floor((Value - Min) / BucketWidth);\n"
+"	if (Bucket < 0)\n"
+"		Bucket = 0;\n"
+"	else if (Bucket >= nNumBuckets)\n"
+"		Bucket = nNumBuckets - 1;\n"
+"	return Bucket;\n"
+"}\n"
+"\n"
 "\n"
 "function BuildHistogramData(Values)\n"
 "{\n"
@@ -2389,7 +2409,7 @@ const char g_MicroProfileHtml_end_1[] =
 "		Buckets[i] = 0;\n"
 "	for(let i = 0; i < Values.length; ++i)\n"
 "	{\n"
-"		let idx = Math.floor(((Values[i] - Min) / Range) * (nNumBuckets - 1));\n"
+"		let idx = HistogramBucket(Min, Max, nNumBuckets, Values[i]);\n"
 "		Buckets[idx]++;\n"
 "	}\n"
 "	let BucketMax = 0;\n"
@@ -2399,7 +2419,7 @@ const char g_MicroProfileHtml_end_1[] =
 "	return {Buckets: Buckets, BucketMax: BucketMax, Min: Min, Max: Max, NumBuckets: nNumBuckets};\n"
 "}\n"
 "\n"
-"function DrawHistogram(context, HistData, Color, x, y, w, h)\n"
+"function DrawHistogram(context, HistData, Duration, Color, x, y, w, h)\n"
 "{\n"
 "	if(!HistData)\n"
 "		return;\n"
@@ -2411,12 +2431,22 @@ const char g_MicroProfileHtml_end_1[] =
 "	// draw bars\n"
 "	let BarWidth = w / HistData.NumBuckets;\n"
 "	context.fillStyle = Color;\n"
+"	let HistRange = HistData.Max - HistData.Min;\n"
+"	\n"
+"	let BucketIndex = Math.min(HistData.NumBuckets-1, HistogramBucket(HistData.Min, HistData.Max, HistData.NumBuckets, Duration)); \n"
+"\n"
 "	for(let i = 0; i < HistData.NumBuckets; ++i)\n"
 "	{\n"
-"		let BarHeight = (HistData.Buckets[i] / HistData.BucketMax) * (h - 2);\n"
+"		let BarHeight = (HistData.Buckets[i] / HistData.BucketMax) * (h - 2)\n"
+"		let Active = BucketIndex == i;\n"
 "		if(HistData.Buckets[i] > 0 && BarHeight < 1)\n"
 "			BarHeight = 1;\n"
+"\n"
+"		if(Active)\n"
+"			context.fillStyle = g_HoverColor;\n"
 "		context.fillRect(x + i * BarWidth, y + h - BarHeight, BarWidth - 1, BarHeight);\n"
+"		if(Active)\n"
+"			context.fillStyle = Color;\n"
 "	}\n"
 "\n"
 "	// draw min/max labels with background for readability\n"
@@ -2463,13 +2493,17 @@ const char g_MicroProfileHtml_end_1[] =
 "	}\n"
 "	StringArray.push({label: \"\", value: \"\"});\n"
 "\n"
+"\n"
+"	let Duration = -1;\n"
 "	if(RangeValid(SelectedRangeGpu))\n"
 "	{\n"
-"		StringArray.push({label: \"GPU Time\", value: (SelectedRangeGpu.End-SelectedRangeGpu.Begin).toFixed(3)});\n"
+"		Duration = SelectedRangeGpu.End-SelectedRangeGpu.Begin;\n"
+"		StringArray.push({label: \"GPU Time\", value: (Duration).toFixed(3)});\n"
 "	}\n"
 "	else if(RangeValid(SelectedRangeCpu))\n"
 "	{\n"
-"		StringArray.push({label: \"CPU Time\", value: (SelectedRangeCpu.End-SelectedRangeCpu.Begin).toFixed(3)});\n"
+"		Duration = SelectedRangeCpu.End-SelectedRangeCpu.Begin;\n"
+"		StringArray.push({label: \"CPU Time\", value: (Duration).toFixed(3)});\n"
 "	}\n"
 "	else\n"
 "	{\n"
@@ -2478,11 +2512,11 @@ const char g_MicroProfileHtml_end_1[] =
 "\n"
 "	StringArray.push({label: \"\", value: \"\"});\n"
 "	let HistogramColor = g_Colors[So.TimerInfo[nHoverToken].cid];\n"
-"	let Add = function(Src, Color)\n"
+"	let Add = function(Src, Duration, Color)\n"
 "	{\n"
 "		if(Src.HistogramData)\n"
 "		{\n"
-"			StringArray.push({histogram: Src.HistogramData, color:HistogramColor});\n"
+"			StringArray.push({histogram: Src.HistogramData, color:HistogramColor, duration:Duration});\n"
 "		}\n"
 "	\n"
 "		StringArray.push({label: \"Total\", value: \"\" + Src.Sum, color:Color});\n"
@@ -2498,27 +2532,20 @@ const char g_MicroProfileHtml_end_1[] =
 "	{\n"
 "		const RANGE_COLOR = \'cyan\';\n"
 "		StringArray.push({label: \"[\" + RangeAggr.Range.Begin.toFixed(2) + \"-\" + RangeAggr.Range.End.toFixed(2) + \"]\", value: \"All\", color: RANGE_COLOR});\n"
-"		// if(RangeAggr.Total.HistogramData)\n"
-"		// {\n"
-"		// 	StringArray.push({histogram: RangeAggr.Total.HistogramData, color: RANGE_COLOR});\n"
-"		// }\n"
-"		Add(RangeAggr.Total, RANGE_COLOR);\n"
+"		Add(RangeAggr.Total, Duration, RANGE_COLOR);\n"
 "		StringArray.push({label: \"\", value: \"\", color: RANGE_COLOR});\n"
 "		StringArray.push({label: \"[\" + RangeAggr.Range.Begin.toFixed(2) + \"-\" + RangeAggr.Range.End.toFixed(2) + \"]\", value: So.ThreadNames[RangeAggr.LogIndex], color: RANGE_COLOR});\n"
-"		// if(RangeAggr.Log.HistogramData)\n"
-"		// {\n"
-"		// 	StringArray.push({histogram: RangeAggr.Log.HistogramData, color: RANGE_COLOR});\n"
-"		// }\n"
-"		Add(RangeAggr.Log, RANGE_COLOR);\n"
+"		Add(RangeAggr.Log, Duration, RANGE_COLOR);\n"
 "	}\n"
 "	else\n"
 "	{\n"
+"		Add(So.TimerInfo[nHoverToken], Duration);\n"
+"\n"
 "		if(RangeValid(SelectedRangeGpu))\n"
 "		{\n"
 "			StringArray.push({label: \"\", value: \"\"});\n"
 "			StringArray.push({label: \"GPU Aggregates\", value: \"\"});\n"
 "		}\n"
-"		Add(So.TimerInfo[nHoverToken]);\n"
 "	}\n"
 "\n"
 "	StringArray.push({label: \"\", value: \"\"});\n"
@@ -2921,7 +2948,11 @@ const char g_MicroProfileHtml_end_1[] =
 "		DrawTimer(ExclusiveAverage, Color);\n"
 "		DrawTimer(ExclusiveMax, Color);\n"
 "\n"
-"		context.fillStyle = \'white\';\n"
+"		context.fillStyle = \'whi";
+
+const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
+const char g_MicroProfileHtml_end_2[] =
+"te\';\n"
 "		var Col = R;\n"
 "		for(var j = 0; j < nMetaLen; ++j)\n"
 "		{\n"
@@ -2933,11 +2964,7 @@ const char g_MicroProfileHtml_end_1[] =
 "		context.fillRect(0, Y, NameWidth, Height);\n"
 "		context.textAlign = \'right\';\n"
 "		context.fillStyle = Color;\n"
-"		context.fillText(Timer.name, NameWidth - 5,";
-
-const size_t g_MicroProfileHtml_end_1_size = sizeof(g_MicroProfileHtml_end_1);
-const char g_MicroProfileHtml_end_2[] =
-" YText);\n"
+"		context.fillText(Timer.name, NameWidth - 5, YText);\n"
 "		context.textAlign = \'left\';\n"
 "		if(showgroup)\n"
 "		{\n"
@@ -4150,7 +4177,11 @@ const char g_MicroProfileHtml_end_2[] =
 "													RangeGpuNext.Begin = RangeCpuNext.Begin;\n"
 "													RangeGpuNext.End = RangeCpuNext.End;\n"
 "													RangeGpuNext.Thread = nLog;\n"
-"													RangeGpuNext.Off = XOffset;\n"
+"													RangeGpuNe";
+
+const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
+const char g_MicroProfileHtml_end_3[] =
+"xt.Off = XOffset;\n"
 "\n"
 "													RangeCpuNext.Begin = TreeLevel.CpuBegin[j];\n"
 "													RangeCpuNext.End = TreeLevel.CpuBegin[j] + TreeLevel.CpuDuration[j];\n"
@@ -4164,11 +4195,7 @@ const char g_MicroProfileHtml_end_2[] =
 "												}\n"
 "												nHoverTokenNext = Index;\n"
 "												nHoverTokenStack = r;\n"
-"												nHoverTokenIndexNext = TreeLe";
-
-const size_t g_MicroProfileHtml_end_2_size = sizeof(g_MicroProfileHtml_end_2);
-const char g_MicroProfileHtml_end_3[] =
-"vel.Source[j];\n"
+"												nHoverTokenIndexNext = TreeLevel.Source[j];\n"
 "												nHoverTokenLogIndexNext = nLog;\n"
 "												HoverTokenNextOwner = S;\n"
 "												HasSetHover = 1;\n"
@@ -4519,6 +4546,7 @@ const char g_MicroProfileHtml_end_3[] =
 "								return ConvertHslToColor(H, S, L);\n"
 "							};\n"
 "							let ColorCV = f();\n"
+"							g_HoverColor = ColorCV;\n"
 "							ColorDark = Color = ColorCV; ;\n"
 "						}\n"
 "					}\n"
@@ -5508,7 +5536,11 @@ const char g_MicroProfileHtml_end_3[] =
 "		if(ProfileMode != 3)\n"
 "		{\n"
 "			PushIntoArray(ProfileDrawTime, DrawTime);\n"
-"			PushIntoArray(ProfileDeltaTime, Delta);\n"
+"			PushIntoArray(ProfileDeltaTime, ";
+
+const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
+const char g_MicroProfileHtml_end_4[] =
+"Delta);\n"
 "			PushIntoArray(ProfileDraw2Draw, Draw2Draw);\n"
 "		}\n"
 "		ProfileDrawStartLast = ProfileDrawStart;\n"
@@ -5530,11 +5562,7 @@ const char g_MicroProfileHtml_end_3[] =
 "		FilterInputMenuDivPos.y = y;\n"
 "		FilterInputMenuDivPos.w = w;\n"
 "		FilterInputMenuDiv.style[\'left\'] = x + \'px\';\n"
-"		FilterInputMenuDiv.style[\'top\'] =";
-
-const size_t g_MicroProfileHtml_end_3_size = sizeof(g_MicroProfileHtml_end_3);
-const char g_MicroProfileHtml_end_4[] =
-" y + \'px\';\n"
+"		FilterInputMenuDiv.style[\'top\'] = y + \'px\';\n"
 "		FilterInputMenu.style[\'width\'] = w + \'px\';\n"
 "	}\n"
 "}\n"
@@ -6882,7 +6910,11 @@ const char g_MicroProfileHtml_end_4[] =
 "	//console.log(\"keyup \", evt.keyCode);\n"
 "	if(evt.keyCode == 18)\n"
 "	{\n"
-"		ToolTipFlip = 0;\n"
+"		ToolTipFlip = 0;";
+
+const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
+const char g_MicroProfileHtml_end_5[] =
+"\n"
 "	}\n"
 "	if(!FilterSearchActive && !IgnoreInput && SubMenuActive == -1)\n"
 "	{\n"
@@ -6914,11 +6946,7 @@ const char g_MicroProfileHtml_end_4[] =
 "		if(evt.keyCode == 187)\n"
 "		{\n"
 "			DrawDetailedFlameMode = (DrawDetailedFlameMode+1) % 3;\n"
-"			FilterSe";
-
-const size_t g_MicroProfileHtml_end_4_size = sizeof(g_MicroProfileHtml_end_4);
-const char g_MicroProfileHtml_end_5[] =
-"archReset();\n"
+"			FilterSearchReset();\n"
 "		}\n"
 "		if(evt.keyCode == 189)\n"
 "		{\n"
@@ -8336,7 +8364,11 @@ const char g_MicroProfileHtml_end_5[] =
 "		var colordark = \"hsl(\" + cidx + \",80%, 30%)\";\n"
 "		var colordark_cid = GetColorIndex(colordark);\n"
 "		var colortrans = \"hsla(\" + cidx + \",55%, 80%, 0.2)\";\n"
-"		S.ThreadColors[i] = {\"color\":color, \"colordark\":colordark, \"cidx\":cidx, \"gradient\":null,\"gradientoff\":null, \"coloroff\":coloroff, \"colordark_cid\":colordark_cid, \"colortrans\":colortrans};\n"
+"		S.ThreadColors[i] = {\"color\":color, \"colordark\":colordark, \"cidx\":cidx, \"gradient\":null,\"gradientoff\":null, \"coloroff\":co";
+
+const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
+const char g_MicroProfileHtml_end_6[] =
+"loroff, \"colordark_cid\":colordark_cid, \"colortrans\":colortrans};\n"
 "	}\n"
 "}\n"
 "\n"
@@ -8354,11 +8386,7 @@ const char g_MicroProfileHtml_end_5[] =
 "		let widthname = context.measureText(S.TimerInfo[i].name).width;\n"
 "		S.TimerInfo[i].wtotal = width;\n"
 "		S.TimerInfo[i].w = widthname;\n"
-"		S.TimerNameWidth = Math.m";
-
-const size_t g_MicroProfileHtml_end_5_size = sizeof(g_MicroProfileHtml_end_5);
-const char g_MicroProfileHtml_end_6[] =
-"ax(S.TimerNameWidth, widthname);\n"
+"		S.TimerNameWidth = Math.max(S.TimerNameWidth, widthname);\n"
 "	}\n"
 "	for(let i in S.GroupInfo)\n"
 "	{\n"
