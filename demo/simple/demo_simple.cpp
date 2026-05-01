@@ -173,7 +173,9 @@ int main(int argc, char* argv[])
 		if(!once)
 		{
 			once = 1;
+#if MICROPROFILE_ENABLED
 			printf("open localhost:%d in chrome to capture profile data\n", MicroProfileWebServerPort());
+#endif
 		}
 	}
 	#if AUTO_FLIP

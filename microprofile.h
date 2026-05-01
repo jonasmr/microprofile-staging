@@ -1165,8 +1165,8 @@ extern "C"
 	MICROPROFILE_API void MicroProfileSetCurrentNodeVulkan(uint32_t nNode);
 #endif
 
-	MICROPROFILE_API void MicroProfileDumpFile(const char* pHtml, const char* pCsv, float fCpuSpike, float fGpuSpike, uint32_t FrameCount IF_CPP(= MICROPROFILE_WEBSERVER_DEFAULT_FRAMES));
-	MICROPROFILE_API void MicroProfileDumpFileImmediately(const char* pHtml, const char* pCsv, void* pGpuContext, uint32_t FrameCount IF_CPP(= MICROPROFILE_WEBSERVER_DEFAULT_FRAMES));
+	MICROPROFILE_API void MicroProfileDumpFile(const char* pHtml, uint32_t FrameCountHtml, const char* pCsv, uint32_t FrameCountCSV, float fCpuSpike, float fGpuSpike);
+	MICROPROFILE_API void MicroProfileDumpFileImmediately(const char* pHtml, uint32_t FrameCountHTML, const char* pCsv, uint32_t FrameCountCSV, void* pGpuContext);
 
 #if MICROPROFILE_ENABLED && MICROPROFILE_WEBSERVER
 	MICROPROFILE_API uint32_t MicroProfileWebServerPort();

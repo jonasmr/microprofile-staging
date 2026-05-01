@@ -1104,7 +1104,8 @@ struct MicroProfile
 	float fDumpGpuSpike;
 	char HtmlDumpPath[512];
 	char CsvDumpPath[512];
-	uint32_t DumpFrameCount;
+	uint32_t DumpFrameCountCSV;
+	uint32_t DumpFrameCountHTML;
 
 	int64_t nPauseTicks;
 	std::atomic<int64_t> nContextSwitchStalledTick;
@@ -1880,7 +1881,8 @@ void MicroProfileInit()
 		S.WebSocketGroups = -1;
 		S.nSocketFail = 0;
 
-		S.DumpFrameCount = MICROPROFILE_WEBSERVER_DEFAULT_FRAMES;
+		S.DumpFrameCountCSV = MICROPROFILE_WEBSERVER_DEFAULT_FRAMES;
+		S.DumpFrameCountHTML = MICROPROFILE_WEBSERVER_DEFAULT_FRAMES;
 
 #if MICROPROFILE_COUNTER_HISTORY
 		S.nCounterHistoryPut = 0;
@@ -5102,7 +5104,7 @@ void MicroProfileSetWebServerPort(uint32_t nPort)
 	}
 }
 
-void MicroProfileDumpFileImmediately(const char* pHtml, const char* pCsv, void* pGpuContext, uint32_t FrameCount)
+void MicroProfileDumpFileImmediately(const char* pHtml, uint32_t FrameCountHTML, const char* pCsv, uint32_t FrameCountCSV, void* pGpuContext)
 {
 	for(uint32_t i = 0; i < 2; ++i)
 	{
@@ -5149,15 +5151,17 @@ void MicroProfileDumpFileImmediately(const char* pHtml, const char* pCsv, void* 
 	S.nDumpFileNextFrame = nDumpMask;
 	S.nDumpSpikeMask = 0;
 	S.nDumpFileCountDown = 0;
-	S.DumpFrameCount = FrameCount;
+	S.DumpFrameCountCSV = FrameCountCSV;
+	S.DumpFrameCountHTML = FrameCountHTML;
 
 	MicroProfileDumpToFile();
 }
-void MicroProfileDumpFile(const char* pHtml, const char* pCsv, float fCpuSpike, float fGpuSpike, uint32_t FrameCount)
+void MicroProfileDumpFile(const char* pHtml, uint32_t FrameCountHTML, const char* pCsv, uint32_t FrameCountCSV, float fCpuSpike, float fGpuSpike)
 {
 	S.fDumpCpuSpike = fCpuSpike;
 	S.fDumpGpuSpike = fGpuSpike;
-	S.DumpFrameCount = FrameCount;
+	S.DumpFrameCountCSV = FrameCountCSV;
+	S.DumpFrameCountHTML = FrameCountHTML;
 	uint32_t nDumpMask = 0;
 	if(pHtml)
 	{
@@ -6546,7 +6550,7 @@ void MicroProfileDumpToFile()
 			FILE* F = fopen(Path, "w");
 			if(F)
 			{
-				MicroProfileDumpHtml(MicroProfileWriteFile, F, S.DumpFrameCount, S.HtmlDumpPath);
+				MicroProfileDumpHtml(MicroProfileWriteFile, F, S.DumpFrameCountHTML, S.HtmlDumpPath);
 				fclose(F);
 			}
 		}
@@ -6556,7 +6560,7 @@ void MicroProfileDumpToFile()
 #if MICROPROFILE_LEGACY_CSV
 		MicroProfileDumpCsvLegacy();
 #else
-		MicroProfileDumpCsv(S.DumpFrameCount);
+		MicroProfileDumpCsv(S.DumpFrameCountHTML);
 #endif
 	}
 }

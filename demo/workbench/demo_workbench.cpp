@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 	MICROPROFILE_COUNTER_CONFIG("/test/cosinus", MICROPROFILE_COUNTER_FORMAT_DEFAULT, 0, MICROPROFILE_COUNTER_FLAG_DETAILED);
 
 	#if DUMP_SPIKE_TEST
-	MicroProfileDumpFile("spike.html", "spike.csv", 200.f, -1.f);
+	MicroProfileDumpFile("spike.html", MICROPROFILE_MAX_FRAME_HISTORY, "spike.csv", MICROPROFILE_MAX_FRAME_HISTORY, 200.f, -1.f);
 	#endif
 
 

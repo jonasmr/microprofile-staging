@@ -63,7 +63,7 @@ void Run2Sec()
 		printf("\r%4.2f", fTime);		
 	}while(fTime < 2);
 	printf("\n");
-	MicroProfileDumpFileImmediately("2sec", "2sec", nullptr);
+	MicroProfileDumpFileImmediately("2sec", MICROPROFILE_MAX_FRAME_HISTORY, "2sec", MICROPROFILE_MAX_FRAME_HISTORY, nullptr);
 
 
 }
